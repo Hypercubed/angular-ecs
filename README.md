@@ -1,6 +1,6 @@
 # angular-ecs
 
-A entity-component-system game framework made specifically for AngularJs.
+An entity-component-system game framework made specifically for AngularJs.
 
 ## Getting Started
 
