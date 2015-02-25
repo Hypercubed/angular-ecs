@@ -99,7 +99,7 @@
       };
       return Entity;
     }
-  ]).provider('$components', MapProvider).provider('$systems', MapProvider).provider('$entities', MapProvider).service('ngEcs', function (EcsFactory) {
+  ]).provider('$components', MapProvider).provider('$systems', MapProvider).provider('$entities', ListProvider).service('ngEcs', function (EcsFactory) {
     return new EcsFactory();
   }).factory('EcsFactory', function ($log, $timeout, $components, $systems, $entities, Entity) {
     function Ecs(opts) {
