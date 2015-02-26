@@ -164,6 +164,14 @@ module.exports = function(grunt) {
         src: '<%= concat.dist.dest %>',
         dest: '<%= yo.dist %>/<%= pkg.name %>.min.js'
       }
+    },
+    bump: {
+      options: {
+        files: ['package.json','bower.json'],
+        commitFiles: ['package.json','bower.json'],
+        push: false,
+        pushTo: 'origin'
+      }
     }
   });
 
@@ -182,7 +190,7 @@ module.exports = function(grunt) {
   grunt.registerTask('release', [
     'test',
     'bump-only',
-    'dist',
+    'build',
     'bump-commit'
   ]);
 
