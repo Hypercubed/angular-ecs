@@ -2,8 +2,8 @@
   "name": "angular-ecs",
   "version": "0.0.1",
   "dependencies": {
-    "angular-third-party": "Hypercubed/angular-third-party#~0.0.1",
-    "eventemitter2": "~0.4.14"
+    "eventemitter2": "~0.4.14",
+    "angular-third-party": "Hypercubed/angular-third-party"
   },
   "devDependencies": {
     "angular": "latest",

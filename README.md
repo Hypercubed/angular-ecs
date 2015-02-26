@@ -18,6 +18,8 @@ bower install --save Hypercubed/angular-ecs
 - take advantage of AngularJs tools
 - easy to serialize entities
 - feel like part of angular
+- don't fight angular or js
+- understand and take advantage of browser optimization
 
 ## Documentation
 (coming soon)

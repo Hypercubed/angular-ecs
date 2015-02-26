@@ -1,6 +1,6 @@
 'use strict';
 
-describe('Module: hc.ngEcs', function () {
+describe('module', function () {
 
   var ngEcs;
 
@@ -19,14 +19,120 @@ describe('Module: hc.ngEcs', function () {
     expect(ngEcs.entities).toBeDefined();
   });
 
+});
+
+describe('entities', function () {
+
+  var ngEcs;
+
+  beforeEach(module('hc.ngEcs', function() {
+
+  }));
+
+  beforeEach(inject(function(_ngEcs_){
+    ngEcs = _ngEcs_;
+  }));
+
   it('should start empty', function () {
-    expect(ngEcs.entities.length).toBe(0);
+    expect(Object.keys(ngEcs.entities).length).toBe(0);
   });
 
   it('should create entities', function () {
-    ngEcs.$e({});
-    expect(ngEcs.entities.length).toBe(1);
+    var e = ngEcs.$e({});
+    expect(Object.keys(ngEcs.entities).length).toBe(1);
+    expect(ngEcs.entities[e._id]).toBe(e);
   });
+
+  it('should create entities with id', function () {
+    var e = ngEcs.$e('e1', {});
+    expect(Object.keys(ngEcs.entities).length).toBe(1);
+    expect(ngEcs.entities.e1).toBe(e);
+  });
+
+  it('should delete entities', function () {
+    var e = ngEcs.$e({});
+    ngEcs.$$removeEntity(e);
+    expect(Object.keys(ngEcs.entities).length).toBe(0);
+    expect(ngEcs.entities[e._id]).toBeUndefined();
+  });
+
+  it('should invoke callbacks', function () {
+    var e = ngEcs.$e({});
+
+    e.$on('add', function(_e,k) {
+      expect(_e).toBe(e);
+      expect(k).toBe('test');
+    });
+
+    e.$add('test');
+  });
+
+  it('should not invoke callbacks for non-components', function () {
+    var e = ngEcs.$e({});
+
+    e.$on('add', function(_e,k) {
+      expect(_e).toBe(e);
+      expect(k).toBe('test');
+    });
+
+    e.$add('test');
+    e.$add('_test');
+    e.$add('$test');
+  });
+
+});
+
+describe('components', function () {
+
+  var ngEcs;
+
+  beforeEach(module('hc.ngEcs', function() {
+
+  }));
+
+  beforeEach(inject(function(_ngEcs_){
+    ngEcs = _ngEcs_;
+  }));
+
+  it('should create components', function () {
+    ngEcs.$c('test', {});
+    expect(ngEcs.components.test).toBeDefined();
+  });
+
+  it('should use object as base', function () {
+    ngEcs.$c('testComponent', { testing: 123 });
+    var e = ngEcs.$e(['testComponent']);
+    expect(e.testComponent.testing).toBe(123);
+  });
+
+  it('should use function as constructor', function () {
+    var called = 0;
+
+    function TestComponent() {
+      called++;
+    }
+
+    ngEcs.$c('testComponent', TestComponent);
+    var e = ngEcs.$e(['testComponent']);
+
+    expect(called).toBe(1);
+    expect(e.testComponent instanceof TestComponent);
+    expect(e.testComponent.prototype === TestComponent.prototype);
+  });
+
+});
+
+describe('systems', function () {
+
+  var ngEcs;
+
+  beforeEach(module('hc.ngEcs', function() {
+
+  }));
+
+  beforeEach(inject(function(_ngEcs_){
+    ngEcs = _ngEcs_;
+  }));
 
   it('should create systems', function () {
     ngEcs.$s('test', {});
@@ -55,7 +161,7 @@ describe('Module: hc.ngEcs', function () {
     ngEcs.$e(['component2']);
     ngEcs.$e(['component2']);
 
-    expect(ngEcs.entities.length).toBe(4);
+    expect(Object.keys(ngEcs.entities).length).toBe(4);
     expect(ngEcs.systems.system1.$family.length).toBe(2);
     expect(ngEcs.systems.system2.$family.length).toBe(3);
     expect(ngEcs.systems.system3.$family.length).toBe(0);
@@ -97,7 +203,7 @@ describe('Module: hc.ngEcs', function () {
     ngEcs.$e(['component2']);
     ngEcs.$e(['component2']);
 
-    expect(ngEcs.entities.length).toBe(4);
+    expect(Object.keys(ngEcs.entities).length).toBe(4);
     expect(c1).toBe(2);
     expect(c2).toBe(3);
     expect(c3).toBe(0);
@@ -139,7 +245,7 @@ describe('Module: hc.ngEcs', function () {
     var e3 = ngEcs.$e();
     var e4 = ngEcs.$e();
 
-    expect(ngEcs.entities.length).toBe(4);
+    expect(Object.keys(ngEcs.entities).length).toBe(4);
     expect(ngEcs.systems.system1.$family.length).toBe(0);
     expect(ngEcs.systems.system2.$family.length).toBe(0);
     expect(ngEcs.systems.system3.$family.length).toBe(0);
@@ -156,7 +262,7 @@ describe('Module: hc.ngEcs', function () {
     e4.$add('component2');
 
 
-    expect(ngEcs.entities.length).toBe(4);
+    expect(Object.keys(ngEcs.entities).length).toBe(4);
     expect(ngEcs.systems.system1.$family.length).toBe(2);
     expect(ngEcs.systems.system2.$family.length).toBe(3);
     expect(ngEcs.systems.system3.$family.length).toBe(0);
@@ -203,7 +309,7 @@ describe('Module: hc.ngEcs', function () {
     ngEcs.$e(['component2']);
     ngEcs.$e(['component2']);
 
-    expect(ngEcs.entities.length).toBe(4);
+    expect(Object.keys(ngEcs.entities).length).toBe(4);
     expect(ngEcs.systems.system1.$family.length).toBe(2);
     expect(ngEcs.systems.system2.$family.length).toBe(3);
     expect(ngEcs.systems.system3.$family.length).toBe(0);
@@ -226,4 +332,22 @@ describe('Module: hc.ngEcs', function () {
 
   });
 
+  it('should reuse families', function () {
+
+    ngEcs.$s('system1', {
+      $require: ['component1']
+    });
+
+    ngEcs.$s('system2', {
+      $require: ['component2']
+    });
+
+    ngEcs.$s('system3', {
+      $require: ['component1']
+    });
+
+    expect(ngEcs.systems.system1.$family).toBe(ngEcs.systems.system3.$family);
+    expect(ngEcs.systems.system1.$family).toNotBe(ngEcs.systems.system2.$family);
+
+  });
 });

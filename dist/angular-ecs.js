@@ -19,25 +19,6 @@
       return map;
     };
   };
-  var ListProvider = function () {
-    var list = [];
-    this.register = function (name, constructor) {
-      if (angular.isObject(name)) {
-        angular.extend(list, name);
-      } else {
-        list[name] = constructor;
-      }
-      return this;
-    };
-    this.$get = function ($injector) {
-      angular.forEach(list, function (value, key) {
-        if (angular.isFunction(value)) {
-          list[key] = $injector.invoke(value, null, null, key);
-        }
-      });
-      return list;
-    };
-  };
   angular.module('hc.ngEcs', ['hc.thirdParty']).config([
     'thirdPartyProvider',
     function (thirdPartyProvider) {
@@ -53,14 +34,25 @@
         return '' + _uuid++ + '_' + timestamp;
       }
       function Entity(id) {
+        if (false === this instanceof Entity) {
+          return new Entity(id);
+        }
         this._id = id || uuid();
         this.$$eventEmitter = new EventEmitter2();
       }
       // add a component, key, instance, constructor
       Entity.prototype.$add = function (key, instance) {
+        if (!key) {
+          return;
+        }
         // remove if exists
         if (this[key]) {
           this.$remove(key);
+        }
+        // not a component by convention
+        if (key.charAt(0) === '$' || key.charAt(0) === '_') {
+          this[key] = angular.copy(instance);
+          return;
         }
         // is it a registered component?
         if ($components.hasOwnProperty(key)) {
@@ -99,7 +91,7 @@
       };
       return Entity;
     }
-  ]).provider('$components', MapProvider).provider('$systems', MapProvider).provider('$entities', ListProvider).service('ngEcs', function (EcsFactory) {
+  ]).provider('$components', MapProvider).provider('$systems', MapProvider).provider('$entities', MapProvider).service('ngEcs', function (EcsFactory) {
     return new EcsFactory();
   }).factory('EcsFactory', function ($log, $timeout, $components, $systems, $entities, Entity) {
     function Ecs(opts) {
@@ -163,7 +155,7 @@
       e.$on('remove', function (e, k) {
         self.$onComponentRemove(e, k);
       });
-      this.entities.push(e);
+      this.entities[e._id] = e;
       return e;
     };
     function remove(arr, instance) {
@@ -184,13 +176,15 @@
       instance.$world = null;
       instance.$off('add', this.$onComponentAdd);
       angular.forEach(instance, function (value, key) {
-        instance.$remove(key);
+        if (key.charAt(0) !== '$' && key.charAt(0) !== '_') {
+          instance.$remove(key);
+        }
       });
       angular.forEach(this.families, function (family) {
         remove(family, instance);
       });
       instance.$off('remove', this.$onComponentRemove);
-      remove(this.entities, instance);
+      delete this.entities[instance._id];
     };
     function matchEntityToFamily(entity, require) {
       if (!require) {
