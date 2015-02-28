@@ -17,8 +17,8 @@ bower install --save Hypercubed/angular-ecs
 - uses angular for DI
 - take advantage of AngularJs tools
 - easy to serialize entities
-- feel like part of angular
-- don't fight angular or js
+- feels like part of angular
+- don't fight angular or javascript
 - understand and take advantage of browser optimization
 
 ## Documentation

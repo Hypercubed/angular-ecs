@@ -43,39 +43,46 @@
       // add a component, key, instance, constructor
       Entity.prototype.$add = function (key, instance) {
         if (!key) {
-          return;
+          throw new Error('Can\'t add component with undefined key.');
         }
         // remove if exists
         if (this[key]) {
           this.$remove(key);
         }
+        instance = angular.isDefined(instance) ? instance : {};
         // not a component by convention
         if (key.charAt(0) === '$' || key.charAt(0) === '_') {
-          this[key] = angular.copy(instance);
-          return;
+          this[key] = instance;
+          return;  // no emit
         }
         // is it a registered component?
         if ($components.hasOwnProperty(key)) {
           var Component = $components[key];
           if (typeof Component === 'function') {
             // constructor
-            this[key] = new Component();
+            if (instance instanceof Component) {
+              // already an instance
+              this[key] = instance;
+            } else {
+              this[key] = new Component();
+              angular.extend(this[key], instance);
+            }
           } else {
-            // model
             this[key] = angular.copy(Component);
-          }
-          this[key].$parent = this;
-          if (instance) {
             angular.extend(this[key], instance);
           }
+          this[key].$parent = this;
         } else {
-          this[key] = angular.copy(instance);
+          this[key] = instance;
         }
         this.$$eventEmitter.emit('add', this, key);
       };
       Entity.prototype.$remove = function (key) {
         delete this[key];
-        this.$$eventEmitter.emit('remove', this, key);
+        // not a component by convention
+        if (key.charAt(0) !== '$' && key.charAt(0) !== '_') {
+          this.$$eventEmitter.emit('remove', this, key);
+        }
       };
       Entity.prototype.$on = function () {
         this.$$eventEmitter.on.apply(this.$$eventEmitter, arguments);
@@ -111,6 +118,7 @@
       this.$playing = false;
       this.$delay = 1000;
       this.$interval = 1;
+      this.$systemsQueue = [];
       angular.extend(this, opts);
     }
     Ecs.prototype.constructor = Ecs;
@@ -127,6 +135,8 @@
     Ecs.prototype.$s = function (key, instance) {
       // perhaps add to $systems
       this.systems[key] = instance;
+      this.$systemsQueue.unshift(instance);
+      // todo: sort by priority
       var fid = getFamilyIdFromRequire(instance.$require);
       instance.$family = this.families[fid] = this.families[fid] || [];
     };
@@ -196,7 +206,7 @@
       return require.every(fn);
     }
     Ecs.prototype.$onComponentAdd = function (entity, key) {
-      $log.debug('$onComponentAdd', entity, key);
+      //$log.debug('$onComponentAdd', entity, key);
       angular.forEach(this.systems, function (system) {
         if (system.$require && system.$require.indexOf(key) < 0) {
           return;
@@ -211,7 +221,7 @@
       });
     };
     Ecs.prototype.$onComponentRemove = function (entity, key) {
-      $log.debug('$onComponentRemoved', entity, key);
+      //$log.debug('$onComponentRemoved', entity, key);
       angular.forEach(this.systems, function (system) {
         if (!system.$require || system.$require.indexOf(key) < 0) {
           return;
@@ -225,12 +235,17 @@
     Ecs.prototype.$update = function (time) {
       var self = this;
       time = angular.isUndefined(time) ? self.$interval : time;
-      angular.forEach(this.systems, function (system) {
-        // todo: sort by priority
+      var i = this.$systemsQueue.length, system;
+      while (i--) {
+        system = this.$systemsQueue[i];
         if (system.$update && system.$family.length > 0) {
           system.$update(time);
         }
-      });
+      }  //this.$systemsQueue.forEach(function(system) {   // todo: sort by priority
+         //  if (system.$update && system.$family.length > 0) {
+         //    system.$update(time);
+         //  }
+         //});
     };
     Ecs.prototype.$start = function () {
       if (this.$playing) {
@@ -241,7 +256,7 @@
       function tick() {
         //console.log('tick', self);
         self.$update(self.$interval);
-        self.$timer = $timeout(tick, self.$delay);  // make variable
+        self.$timer = $timeout(tick, self.$delay);
       }
       tick();
     };

@@ -23,80 +23,178 @@ describe('module', function () {
 
 describe('entities', function () {
 
-  var ngEcs;
+  var ngEcs, $entities;
 
   beforeEach(module('hc.ngEcs', function() {
 
   }));
 
-  beforeEach(inject(function(_ngEcs_){
+  beforeEach(inject(function(_ngEcs_, _$entities_){
     ngEcs = _ngEcs_;
+    $entities = _$entities_;
   }));
 
   it('should start empty', function () {
-    expect(Object.keys(ngEcs.entities).length).toBe(0);
+    expect(ngEcs.entities).toBe($entities);
+    expect(Object.keys($entities).length).toBe(0);
   });
 
   it('should create entities', function () {
-    var e = ngEcs.$e({});
-    expect(Object.keys(ngEcs.entities).length).toBe(1);
-    expect(ngEcs.entities[e._id]).toBe(e);
+    var e = ngEcs.$e();
+    expect(Object.keys($entities).length).toBe(1);
+    expect($entities[e._id]).toBe(e);
   });
 
+
   it('should create entities with id', function () {
-    var e = ngEcs.$e('e1', {});
+    var e = ngEcs.$e('e1');
     expect(Object.keys(ngEcs.entities).length).toBe(1);
-    expect(ngEcs.entities.e1).toBe(e);
+    expect($entities.e1).toBe(e);
   });
 
   it('should delete entities', function () {
-    var e = ngEcs.$e({});
+    var e = ngEcs.$e();
     ngEcs.$$removeEntity(e);
-    expect(Object.keys(ngEcs.entities).length).toBe(0);
-    expect(ngEcs.entities[e._id]).toBeUndefined();
+
+    expect(Object.keys($entities).length).toBe(0);
+    expect($entities[e._id]).toBeUndefined();
   });
 
-  it('should invoke callbacks', function () {
-    var e = ngEcs.$e({});
-
-    e.$on('add', function(_e,k) {
-      expect(_e).toBe(e);
-      expect(k).toBe('test');
-    });
-
-    e.$add('test');
+  it('should create entities with component using array', function () {
+    var e = ngEcs.$e(['comp','comp2']);
+    expect(e.comp).toBeDefined();
+    expect(e.comp2).toBeDefined();
   });
 
-  it('should not invoke callbacks for non-components', function () {
-    var e = ngEcs.$e({});
+  it('should create entities with components using map', function () {
+    var e = ngEcs.$e({ comp: { x: 1 }, comp2: { y: 2 } });
+    expect(e.comp).toBeDefined();
+    expect(e.comp2).toBeDefined();
+    expect(e.comp.x).toBe(1);
+    expect(e.comp2.y).toBe(2);
+  });
 
+  it('should add components', function () {
+    var e = ngEcs.$e();
+
+    e.$add('comp', { x: 1 });
+    e.$add('comp2', { y: 2 });
+
+    expect(e.comp).toBeDefined();
+    expect(e.comp2).toBeDefined();
+    expect(e.comp.x).toBe(1);
+    expect(e.comp2.y).toBe(2);
+  });
+
+  it('should throw exception on add undefined component', function() {
+    var e = ngEcs.$e();
+    expect(function() {
+      e.$add();
+    }).toThrow();
+  });
+
+  it('should invoke callbacks on add', function () {
+    var e = ngEcs.$e();
+
+    var called = [];
     e.$on('add', function(_e,k) {
       expect(_e).toBe(e);
-      expect(k).toBe('test');
+      called.push(k);
     });
 
-    e.$add('test');
-    e.$add('_test');
-    e.$add('$test');
+    e.$add('comp');
+    e.$add('comp2');
+
+    expect(called).toEqual(['comp','comp2']);
+  });
+
+  it('should not invoke callbacks for non-components on add', function () {
+    var e = ngEcs.$e();
+
+    var called = [];
+    e.$on('add', function(_e,k) {
+      expect(_e).toBe(e);
+      called.push(k);
+    });
+
+    e.$add('comp');
+    e.$add('comp2');
+    e.$add('_comp');
+    e.$add('$comp');
+
+    expect(called).toEqual(['comp','comp2']);
+    expect(e.comp).toBeDefined();
+    expect(e._comp).toBeDefined();
+    expect(e.$comp).toBeDefined();
+  });
+
+  it('should remove components', function () {
+    var e = ngEcs.$e();
+
+    e.$add('comp', { x: 1 });
+    e.$add('comp2', { y: 2 });
+    e.$remove('comp');
+
+    expect(e.comp).toBeUndefined();
+    expect(e.comp2).toBeDefined();
+    expect(e.comp2.y).toBe(2);
+  });
+
+  it('should invoke callbacks on remove', function () {
+    var e = ngEcs.$e();
+
+    var called = [];
+    e.$on('remove', function(_e,k) {
+      expect(_e).toBe(e);
+      called.push(k);
+    });
+
+    e.$add('comp');
+    e.$add('comp2');
+    e.$remove('comp');
+
+    expect(called).toEqual(['comp']);
+  });
+
+  it('should not invoke callbacks for non-components on remove', function () {
+    var e = ngEcs.$e();
+
+    var called = [];
+    e.$on('remove', function(_e,k) {
+      expect(_e).toBe(e);
+      called.push(k);
+    });
+
+    e.$add('comp');
+    e.$add('comp2');
+    e.$add('_comp');
+    e.$add('$comp');
+    e.$remove('comp');
+    e.$remove('$comp');
+    e.$remove('_comp');
+    
+    expect(called).toEqual(['comp']);
   });
 
 });
 
 describe('components', function () {
 
-  var ngEcs;
+  var ngEcs, $components;
 
   beforeEach(module('hc.ngEcs', function() {
 
   }));
 
-  beforeEach(inject(function(_ngEcs_){
+  beforeEach(inject(function(_ngEcs_, _$components_){
     ngEcs = _ngEcs_;
+    $components = _$components_;
   }));
 
   it('should create components', function () {
     ngEcs.$c('test', {});
-    expect(ngEcs.components.test).toBeDefined();
+    expect($components.test).toBeDefined();
+    expect($components).toBe(ngEcs.components);
   });
 
   it('should use object as base', function () {
@@ -120,23 +218,41 @@ describe('components', function () {
     expect(e.testComponent.prototype === TestComponent.prototype);
   });
 
+  it('should use function as constructor, unless alread an instance', function () {
+    var called = 0;
+
+    function TestComponent() {
+      called++;
+    }
+
+    ngEcs.$c('testComponent', TestComponent);
+    var e = ngEcs.$e({});
+    e.$add('testComponent', new TestComponent());
+
+    expect(called).toBe(1);
+    expect(e.testComponent instanceof TestComponent);
+    expect(e.testComponent.prototype === TestComponent.prototype);
+  });
+
 });
 
 describe('systems', function () {
 
-  var ngEcs;
+  var ngEcs, $systems;
 
   beforeEach(module('hc.ngEcs', function() {
 
   }));
 
-  beforeEach(inject(function(_ngEcs_){
+  beforeEach(inject(function(_ngEcs_, _$systems_){
     ngEcs = _ngEcs_;
+    $systems = _$systems_;
   }));
 
   it('should create systems', function () {
     ngEcs.$s('test', {});
-    expect(ngEcs.systems.test).toBeDefined();
+    expect($systems.test).toBeDefined();
+    expect($systems).toBe(ngEcs.systems);
   });
 
   it('should create systems and assign entities to families', function () {
@@ -274,7 +390,7 @@ describe('systems', function () {
 
   });
 
-  it('should be able to add components later', function () {
+  it('should be able to remove components', function () {
     var c1 = 0, c2 = 0, c3 = 0, c4 = 0;
     ngEcs.$s('system1', {
       $require: ['component1'],
