@@ -10,14 +10,17 @@
       }
       return this;
     };
-    this.$get = function ($injector) {
-      angular.forEach(map, function (value, key) {
-        if (angular.isFunction(value)) {
-          map[key] = $injector.invoke(value, null, null, key);
-        }
-      });
-      return map;
-    };
+    this.$get = [
+      '$injector',
+      function ($injector) {
+        angular.forEach(map, function (value, key) {
+          if (angular.isFunction(value)) {
+            map[key] = $injector.invoke(value, null, null, key);
+          }
+        });
+        return map;
+      }
+    ];
   };
   angular.module('hc.ngEcs', ['hc.thirdParty']).config([
     'thirdPartyProvider',

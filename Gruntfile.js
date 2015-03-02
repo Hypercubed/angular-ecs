@@ -168,7 +168,7 @@ module.exports = function(grunt) {
     bump: {
       options: {
         files: ['package.json','bower.json'],
-        commitFiles: ['package.json','bower.json'],
+        commitFiles: ['package.json','bower.json','dist/*'],
         push: false,
         pushTo: 'origin'
       }
@@ -182,7 +182,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build', [
     'clean:dist',
-    'less:dist',
     'ngmin:dist',
     'uglify:dist'
   ]);
