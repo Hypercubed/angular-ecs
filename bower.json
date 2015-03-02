@@ -1,6 +1,6 @@
 {
   "name": "angular-ecs",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "dependencies": {
     "eventemitter2": "~0.4.14",
     "angular-third-party": "Hypercubed/angular-third-party"
