@@ -1,6 +1,6 @@
 {
   "name": "angular-ecs",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "An ECS framework built for AngularJS",
   "keywords": [
     "angular",
