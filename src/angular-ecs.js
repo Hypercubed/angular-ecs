@@ -248,11 +248,11 @@
         if (system.$require && system.$require.indexOf(key) < 0) { return; }
         if (!matchEntityToFamily(entity, system.$require))  { return; }
 
+        add(system.$family, entity);
+
         if (system.$addEntity) {
           system.$addEntity(entity);
         }
-
-        add(system.$family, entity);
 
       });
     };

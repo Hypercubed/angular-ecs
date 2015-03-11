@@ -217,10 +217,10 @@
         if (!matchEntityToFamily(entity, system.$require)) {
           return;
         }
+        add(system.$family, entity);
         if (system.$addEntity) {
           system.$addEntity(entity);
         }
-        add(system.$family, entity);
       });
     };
     Ecs.prototype.$onComponentRemove = function (entity, key) {
