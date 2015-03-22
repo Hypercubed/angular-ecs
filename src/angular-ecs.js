@@ -27,11 +27,8 @@
 
   };
 
-  angular.module('hc.ngEcs',['hc.thirdParty'])
-  .config(function(thirdPartyProvider) {
-    thirdPartyProvider.register('EventEmitter2');
-  })
-  .factory('Entity', function(EventEmitter2, $components) {
+  angular.module('hc.ngEcs',[])
+  .factory('Entity', function($components) {
     var _uuid = 0;
     function uuid() {
       var timestamp = new Date().getUTCMilliseconds();
@@ -43,8 +40,38 @@
         return new Entity(id);
       }
       this._id = id || uuid();
-      this.$$eventEmitter = new EventEmitter2();
+
+      this.$$listeners = {};
     }
+
+    Entity.prototype.$on = function(name, listener) {
+      var namedListeners = this.$$listeners[name];
+      if (!namedListeners) {
+        this.$$listeners[name] = namedListeners = [];
+      }
+      namedListeners.push(listener);
+
+      var self = this;
+      return function() {
+        var indexOfListener = namedListeners.indexOf(listener);
+        if (indexOfListener !== -1) {
+          namedListeners[indexOfListener] = null;
+        }
+      };
+    };
+
+    Entity.prototype.$emit = function(name, args) {
+      var empty = [],
+        namedListeners,
+        self = this,
+        listenerArgs = Array.prototype.slice.apply(arguments),
+        i, length;
+
+      namedListeners = self.$$listeners[name] || empty;
+      for (i = 0, length = namedListeners.length; i < length; i++) {
+        namedListeners[i].apply(null, listenerArgs);
+      }
+    };
 
     // add a component, key, instance, constructor
     Entity.prototype.$add = function(key, instance) {
@@ -73,7 +100,7 @@
           if (instance instanceof Component) {  // already an instance
             this[key] = instance;
           } else {
-            this[key] = new Component();
+            this[key] = new Component(this);
             angular.extend(this[key], instance);
           }
         } else {
@@ -85,32 +112,21 @@
         this[key] = instance;
       }
 
-      this.$$eventEmitter.emit('add', this, key);
+      //this.$$eventEmitter.emit('add', this, key);
+      this.$world.$onComponentAdd(this,key);
     };
 
     Entity.prototype.$remove = function(key) {
       delete this[key];
       // not a component by convention
       if (key.charAt(0) !== '$' && key.charAt(0) !== '_') {
-        this.$$eventEmitter.emit('remove', this, key);
+        //this.$$eventEmitter.emit('remove', this, key);
+        this.$world.$onComponentRemove(this,key);
       }
 
     };
 
-    Entity.prototype.$on = function() {
-      this.$$eventEmitter.on.apply(this.$$eventEmitter, arguments);
-      return this;
-    };
 
-    Entity.prototype.$off = function() {
-      this.$$eventEmitter.off.apply(this.$$eventEmitter, arguments);
-      return this;
-    };
-
-    Entity.prototype.$emit = function() {
-      this.$$eventEmitter.emit.apply(this.$$eventEmitter, arguments);
-      return this;
-    };
 
     return Entity;
   })
@@ -177,17 +193,17 @@
       if (Array.isArray(instance)) {
         angular.forEach(instance, function(key) {
           e.$add(key);
-          self.$onComponentAdd(e,key);
+          //self.$onComponentAdd(e,key);
         });
       } else {
         angular.forEach(instance, function(value, key) {
           e.$add(key, value);
-          self.$onComponentAdd(e,key);
+          //self.$onComponentAdd(e,key);
         });
       }
 
-      e.$on('add', function(e,k) { self.$onComponentAdd(e,k); });
-      e.$on('remove', function(e,k) { self.$onComponentRemove(e,k); });
+      //e.$on('add', function(e,k) { self.$onComponentAdd(e,k); });
+      //e.$on('remove', function(e,k) { self.$onComponentRemove(e,k); });
 
       this.entities[e._id] = e;
       return e;
@@ -212,7 +228,7 @@
 
       instance.$world = null;
 
-      instance.$off('add', this.$onComponentAdd);
+      //instance.$off('add', this.$onComponentAdd);
 
       angular.forEach(instance, function(value, key) {
         if (key.charAt(0) !== '$' && key.charAt(0) !== '_') {
@@ -224,7 +240,7 @@
         remove(family, instance);
       });
 
-      instance.$off('remove', this.$onComponentRemove);
+      //instance.$off('remove', this.$onComponentRemove);
 
       delete this.entities[instance._id];
 

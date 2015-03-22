@@ -93,7 +93,7 @@ describe('entities', function () {
     }).toThrow();
   });
 
-  it('should invoke callbacks on add', function () {
+  /* it('should invoke callbacks on add', function () {
     var e = ngEcs.$e();
 
     var called = [];
@@ -106,9 +106,9 @@ describe('entities', function () {
     e.$add('comp2');
 
     expect(called).toEqual(['comp','comp2']);
-  });
+  }); */
 
-  it('should not invoke callbacks for non-components on add', function () {
+  /* it('should not invoke callbacks for non-components on add', function () {
     var e = ngEcs.$e();
 
     var called = [];
@@ -126,7 +126,7 @@ describe('entities', function () {
     expect(e.comp).toBeDefined();
     expect(e._comp).toBeDefined();
     expect(e.$comp).toBeDefined();
-  });
+  }); */
 
   it('should remove components', function () {
     var e = ngEcs.$e();
@@ -140,7 +140,7 @@ describe('entities', function () {
     expect(e.comp2.y).toBe(2);
   });
 
-  it('should invoke callbacks on remove', function () {
+  /* it('should invoke callbacks on remove', function () {
     var e = ngEcs.$e();
 
     var called = [];
@@ -154,9 +154,9 @@ describe('entities', function () {
     e.$remove('comp');
 
     expect(called).toEqual(['comp']);
-  });
+  }); */
 
-  it('should not invoke callbacks for non-components on remove', function () {
+  /* it('should not invoke callbacks for non-components on remove', function () {
     var e = ngEcs.$e();
 
     var called = [];
@@ -172,8 +172,63 @@ describe('entities', function () {
     e.$remove('comp');
     e.$remove('$comp');
     e.$remove('_comp');
-    
+
     expect(called).toEqual(['comp']);
+  }); */
+
+  it('should be able to add events', function () {
+    var called = 0;
+
+    var e = ngEcs.$e();
+
+    e.$on('test',function() {
+      called++;
+    });
+
+    e.$emit('test');
+    e.$emit('test');
+
+    expect(called).toBe(2);
+  });
+
+  it('should pass entity to constructor', function () {
+    var called = 0;
+
+    var e = ngEcs.$e();
+
+    function TestComponent(_e) {
+      expect(_e).toBe(e);
+      called++;
+    }
+
+    ngEcs.$c('testComponent', TestComponent);
+
+    e.$add('testComponent');
+
+    expect(called).toBe(1);
+    expect(e.testComponent instanceof TestComponent);
+    expect(e.testComponent.prototype === TestComponent.prototype);
+  });
+
+  it('should be able to add events in constructor', function () {
+    var called = 0;
+
+    function TestComponent(_e) {
+      _e.$on('test', function() {
+        called++;
+      });
+    }
+
+    ngEcs.$c('testComponent', TestComponent);
+
+    var e = ngEcs.$e(['testComponent']);
+
+    e.$emit('test');
+    e.$emit('test');
+
+    expect(called).toBe(2);
+    expect(e.testComponent instanceof TestComponent);
+    expect(e.testComponent.prototype === TestComponent.prototype);
   });
 
 });
@@ -218,7 +273,7 @@ describe('components', function () {
     expect(e.testComponent.prototype === TestComponent.prototype);
   });
 
-  it('should use function as constructor, unless alread an instance', function () {
+  it('should use function as constructor, unless already an instance', function () {
     var called = 0;
 
     function TestComponent() {
@@ -233,6 +288,8 @@ describe('components', function () {
     expect(e.testComponent instanceof TestComponent);
     expect(e.testComponent.prototype === TestComponent.prototype);
   });
+
+
 
 });
 

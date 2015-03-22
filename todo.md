@@ -6,3 +6,7 @@ _\( managed using [todo-md](https://github.com/Hypercubed/todo-md) \)_
 - [ ] Documentation
 - [ ] System priority
 - [ ] Fix grunt bump
+- [ ] $world -> $engine?
+- [ ] Remove event emmiters?
+- [ ] Formalize component constructor function ComponentConstructor($parent)?
+- [ ] Convert to typescript?
