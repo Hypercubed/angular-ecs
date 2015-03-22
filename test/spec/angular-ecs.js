@@ -176,21 +176,20 @@ describe('entities', function () {
     expect(called).toEqual(['comp']);
   }); */
 
-  it('should be able to add events', function () {
-    var called = 0;
+  it('should be able to add and emit events', function () {
+    var called = [];
 
     var e = ngEcs.$e();
 
     e.$on('test',function() {
       expect(this).toBe(e);
-      expect(Array.prototype.slice.apply(arguments)).toEqual(['arg1', 'arg2']);
-      called++;
+      called.push(Array.prototype.slice.apply(arguments));
     });
 
-    e.$emit('test', 'arg1', 'arg2');
-    e.$emit('test', 'arg1', 'arg2');
+    e.$emit('test', 'arg1');
+    e.$emit('test', 'arg2', 'arg3');
 
-    expect(called).toBe(2);
+    expect(called).toEqual([['arg1'],['arg2','arg3']]);
   });
 
   it('should pass entity to constructor', function () {
