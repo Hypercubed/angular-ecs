@@ -10,3 +10,5 @@ _\( managed using [todo-md](https://github.com/Hypercubed/todo-md) \)_
 - [ ] Remove event emmiters?
 - [ ] Formalize component constructor function ComponentConstructor($parent)?
 - [ ] Convert to typescript?
+- [ ] Add $destroy function?
+- [ ] requestAnimationFrame?

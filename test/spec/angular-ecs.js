@@ -182,11 +182,13 @@ describe('entities', function () {
     var e = ngEcs.$e();
 
     e.$on('test',function() {
+      expect(this).toBe(e);
+      expect(Array.prototype.slice.apply(arguments)).toEqual(['arg1', 'arg2']);
       called++;
     });
 
-    e.$emit('test');
-    e.$emit('test');
+    e.$emit('test', 'arg1', 'arg2');
+    e.$emit('test', 'arg1', 'arg2');
 
     expect(called).toBe(2);
   });
@@ -288,8 +290,6 @@ describe('components', function () {
     expect(e.testComponent instanceof TestComponent);
     expect(e.testComponent.prototype === TestComponent.prototype);
   });
-
-
 
 });
 

@@ -60,16 +60,16 @@
       };
     };
 
-    Entity.prototype.$emit = function(name, args) {
+    Entity.prototype.$emit = function(name) {
       var empty = [],
         namedListeners,
         self = this,
-        listenerArgs = Array.prototype.slice.apply(arguments),
+        listenerArgs = Array.prototype.slice.call(arguments, 1),
         i, length;
 
       namedListeners = self.$$listeners[name] || empty;
       for (i = 0, length = namedListeners.length; i < length; i++) {
-        namedListeners[i].apply(null, listenerArgs);
+        namedListeners[i].apply(self, listenerArgs);
       }
     };
 
