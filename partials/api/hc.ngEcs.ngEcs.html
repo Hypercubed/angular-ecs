@@ -1,0 +1,56 @@
+<a href="https://github.com/Hypercubed/angular-ecs.git/edit/master/src/angular-ecs.js" class="improve-docs"><i class="icon-edit"> </i>Improve this doc</a><a href="https://github.com/Hypercubed/angular-ecs.git/blob/2e8411b/src/angular-ecs.js#L293" class="view-source"><i class="icon-eye-open"> </i>View source</a><h1><code ng:non-bindable="">ngEcs</code>
+<div><span class="hint">service in module <code ng:non-bindable="">hc.ngEcs</code>
+</span>
+</div>
+</h1>
+<div><h2 id="description">Description</h2>
+<div class="description"><div class="hc-ngecs-ngecs-page"><p>ECS engine. Contain System, Components, and Entities.</p>
+</div></div>
+<div class="member method"><h2 id="methods">Methods</h2>
+<ul class="methods"><li><a href="https://github.com/Hypercubed/angular-ecs.git/blob/2e8411b/src/angular-ecs.js#L330" class="view-source icon-eye-open"> </a><h3 id="methods_$c">$c(key, constructor)</h3>
+<div class="$c"><div class="hc-ngecs-ngecs-c-page"><p>Adds a component contructor</p>
+</div><h5 id="methods_$c_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>key</td><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="hc-ngecs-ngecs-c-page"><p>component key</p>
+</div></td></tr><tr><td>constructor</td><td><a href="" class="label type-hint type-hint-function">function</a><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="hc-ngecs-ngecs-c-page"><p>component constructor or prototype</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><a href="https://github.com/Hypercubed/angular-ecs.git/blob/2e8411b/src/angular-ecs.js#L381" class="view-source icon-eye-open"> </a><h3 id="methods_$e">$e(id, instance)</h3>
+<div class="$e"><div class="hc-ngecs-ngecs-e-page"><p>Creates and adds an Entity</p>
+</div><h5 id="methods_$e_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>id</td><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="hc-ngecs-ngecs-e-page"><p>(optional) entity id</p>
+</div></td></tr><tr><td>instance</td><td><a href="" class="label type-hint type-hint-object">object</a><a href="" class="label type-hint type-hint-array">array</a></td><td><div class="hc-ngecs-ngecs-e-page"><p>(optional) config object of entity</p>
+</div></td></tr></tbody></table><h5 id="methods_$e_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-entity">Entity</a></td><td><div class="hc-ngecs-ngecs-e-page"><p>The Entity</p>
+</div></td></tr></table><h4 id="methods_$e_example">Example</h4>
+<div class="example"><div class="hc-ngecs-ngecs-e-page"><pre class="prettyprint linenums">
+//config as array
+ngEcs.$e('player', ['position','control','collision']);
+
+//or config as object
+ngEcs.$e('player', {
+  position: { x: 0, y: 50 },
+  control: {}
+  collision: {}
+});
+</pre>
+</div></div>
+</div>
+</li>
+<li><a href="https://github.com/Hypercubed/angular-ecs.git/blob/2e8411b/src/angular-ecs.js#L349" class="view-source icon-eye-open"> </a><h3 id="methods_$s">$s(key, instance)</h3>
+<div class="$s"><div class="hc-ngecs-ngecs-s-page"><p>Adds a system</p>
+</div><h5 id="methods_$s_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>key</td><td><a href="" class="label type-hint type-hint-string">string</a></td><td><div class="hc-ngecs-ngecs-s-page"><p>system key</p>
+</div></td></tr><tr><td>instance</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="hc-ngecs-ngecs-s-page"><p>system configuration</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><a href="https://github.com/Hypercubed/angular-ecs.git/blob/2e8411b/src/angular-ecs.js#L522" class="view-source icon-eye-open"> </a><h3 id="methods_$start">$start()</h3>
+<div class="$start"><div class="hc-ngecs-ngecs-start-page"><p>Starts the game loop</p>
+</div></div>
+</li>
+<li><a href="https://github.com/Hypercubed/angular-ecs.git/blob/2e8411b/src/angular-ecs.js#L545" class="view-source icon-eye-open"> </a><h3 id="methods_$stop">$stop()</h3>
+<div class="$stop"><div class="hc-ngecs-ngecs-stop-page"><p>Stops the game loop</p>
+</div></div>
+</li>
+<li><a href="https://github.com/Hypercubed/angular-ecs.git/blob/2e8411b/src/angular-ecs.js#L497" class="view-source icon-eye-open"> </a><h3 id="methods_$update">$update()</h3>
+<div class="$update"><div class="hc-ngecs-ngecs-update-page"><p>Calls the update cycle</p>
+</div></div>
+</li>
+</ul>
+</div>
+</div>
