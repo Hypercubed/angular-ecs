@@ -32,11 +32,6 @@ module.exports = function(grunt) {
       ' * @license MIT License, http://www.opensource.org/licenses/MIT\n' +
       ' */\n'
     },
-    open: {
-      server: {
-        path: 'http://localhost:<%= connect.options.port %>'
-      }
-    },
     clean: {
       dist: {
         files: [{
@@ -55,14 +50,8 @@ module.exports = function(grunt) {
         files: '<%= jshint.gruntfile.src %>',
         tasks: ['jshint:gruntfile']
       },
-      less: {
-        files: ['<%= yo.src %>/{,*/}*.less'],
-        tasks: ['less:dist']
-      },
       app: {
         files: [
-          '<%= yo.src %>/{,*/}*.html',
-          '{.tmp,<%= yo.src %>}/{,*/}*.css',
           '{.tmp,<%= yo.src %>}/{,*/}*.js'
         ],
         tasks: ['build']
@@ -70,34 +59,6 @@ module.exports = function(grunt) {
       test: {
         files: '<%= jshint.test.src %>',
         tasks: ['jshint:test', 'qunit']
-      }
-    },
-    connect: {
-      options: {
-        port: 9000,
-        hostname: '0.0.0.0' // Change this to '0.0.0.0' to access the server from outside.
-      },
-      livereload: {
-        options: {
-          middleware: function (connect) {
-            return [
-              lrSnippet,
-              mountFolder(connect, '.tmp'),
-              mountFolder(connect, yoConfig.src)
-            ];
-          }
-        }
-      }
-    },
-    less: {
-      options: {
-        // dumpLineNumbers: 'all',
-        paths: ['<%= yo.src %>']
-      },
-      dist: {
-        files: {
-          '<%= yo.src %>/<%= yo.name %>.css': '<%= yo.src %>/<%= yo.name %>.less'
-        }
       }
     },
     jshint: {
@@ -140,11 +101,6 @@ module.exports = function(grunt) {
         src: ['<%= yo.src %>/<%= pkg.name %>.js'],
         dest: '<%= yo.dist %>/<%= pkg.name %>.js'
       }
-      // dist: {
-      //   files: {
-      //     '/.js': '/.js'
-      //   }
-      // }
     },
     concat: {
       options: {
@@ -172,7 +128,20 @@ module.exports = function(grunt) {
         push: false,
         pushTo: 'origin'
       }
-    }
+    },
+    ngdocs: {
+      all: ['src/**/*.js']
+    },
+    connect: {
+      server: {
+        options: {
+          port: 9001,
+          base: 'docs',
+          hostname: 'localhost',
+          open: true
+        }
+      }
+    },
   });
 
   grunt.registerTask('test', [
@@ -183,7 +152,8 @@ module.exports = function(grunt) {
   grunt.registerTask('build', [
     'clean:dist',
     'ngmin:dist',
-    'uglify:dist'
+    'uglify:dist',
+    'ngdocs'
   ]);
 
   grunt.registerTask('release', [
@@ -192,6 +162,8 @@ module.exports = function(grunt) {
     'build',
     'bump-commit'
   ]);
+
+  grunt.registerTask('serve', ['build','connect','watch']);
 
   grunt.registerTask('default', ['build']);
 
