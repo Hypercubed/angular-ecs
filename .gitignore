@@ -1,6 +1,7 @@
 node_modules
 bower_components
 docs
+.grunt
 .tmp
 .sass-cache
 *.swp

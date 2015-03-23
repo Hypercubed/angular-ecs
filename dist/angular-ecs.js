@@ -13,7 +13,7 @@
   *
   *
   */
-  var MapProvider = function () {
+  function MapProvider() {
     var map = {};
     this.register = function (name, constructor) {
       if (angular.isObject(name)) {
@@ -34,7 +34,7 @@
         return map;
       }
     ];
-  };
+  }
   angular.module('hc.ngEcs', []).factory('Entity', [
     '$components',
     function ($components) {

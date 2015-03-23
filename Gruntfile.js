@@ -142,6 +142,12 @@ module.exports = function(grunt) {
         }
       }
     },
+    'gh-pages': {
+      options: {
+        base: 'docs'
+      },
+      src: ['**']
+    },
   });
 
   grunt.registerTask('test', [
@@ -162,6 +168,8 @@ module.exports = function(grunt) {
     'build',
     'bump-commit'
   ]);
+  
+  grunt.registerTask('publish', ['test','build','bump-only','uglify','bump-commit','gh-pages']);
 
   grunt.registerTask('serve', ['build','connect','watch']);
 

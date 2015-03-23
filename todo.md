@@ -2,13 +2,14 @@
 
 _\( managed using [todo-md](https://github.com/Hypercubed/todo-md) \)_
 
-- [ ] Tests
-- [ ] Documentation
+- [-] Tests
+- [-] Documentation
 - [ ] System priority
 - [ ] Fix grunt bump
 - [ ] $world -> $engine?
-- [ ] Remove event emmiters?
+- [-] Remove event emmiters?
 - [ ] Formalize component constructor function ComponentConstructor($parent)?
-- [ ] Convert to typescript?
+- [ ] Convert to es6/typescript?
 - [ ] Add $destroy function?
 - [ ] requestAnimationFrame?
+- [ ] ngESCProvider.config

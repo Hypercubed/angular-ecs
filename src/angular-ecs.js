@@ -17,7 +17,7 @@
   *
   */
 
-  var MapProvider = function() {
+  function MapProvider() {
 
     var map = {};
 
@@ -39,7 +39,7 @@
       return map;
     }];
 
-  };
+  }
 
   angular.module('hc.ngEcs',[])
 
