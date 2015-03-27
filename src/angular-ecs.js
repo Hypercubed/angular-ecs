@@ -180,7 +180,7 @@
           this[key] = angular.copy(Component);
           angular.extend(this[key], instance);
         }
-        this[key].$parent = this;
+        //this[key].$parent = this;
       } else {
         this[key] = instance;
       }
@@ -505,11 +505,6 @@
           system.$update(time);
         }
       }
-      //this.$systemsQueue.forEach(function(system) {   // todo: sort by priority
-      //  if (system.$update && system.$family.length > 0) {
-      //    system.$update(time);
-      //  }
-      //});
     };
 
     /**
@@ -526,13 +521,12 @@
 
       self.$playing = true;
 
-      function tick() {
-        //console.log('tick', self);
+      function step() {
+        self.$timer = $timeout(step, self.$delay);
         self.$update(self.$interval);
-        self.$timer = $timeout(tick, self.$delay);
       }
 
-      tick();
+      step();
     };
 
     /**
