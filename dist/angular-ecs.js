@@ -435,9 +435,9 @@
           self.$render(DT);
         });
         last = now;
-        requestAnimationFrame(frame);
+        window.requestAnimationFrame(frame);
       }
-      requestAnimationFrame(frame);
+      window.requestAnimationFrame(frame);
     };
     /**
     * @ngdoc service
