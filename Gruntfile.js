@@ -125,7 +125,7 @@ module.exports = function(grunt) {
       options: {
         files: ['package.json','bower.json'],
         commitFiles: ['package.json','bower.json','dist/*'],
-        push: false,
+        push: true,
         pushTo: 'origin'
       }
     },
@@ -168,7 +168,7 @@ module.exports = function(grunt) {
     'build',
     'bump-commit'
   ]);
-  
+
   grunt.registerTask('publish', ['test','build','bump-only','uglify','bump-commit','gh-pages']);
 
   grunt.registerTask('serve', ['build','connect','watch']);

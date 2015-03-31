@@ -1,3 +1,21 @@
+// shims
+(function () {
+  'use strict';
+  window.performance = window.performance || {};
+  window.performance.now = function () {
+    return window.performance.now || window.performance.webkitNow || window.performance.msNow || window.performance.mozNow || Date.now || function () {
+      return new Date().getTime();
+    };
+  }();
+  window.requestAnimationFrame = function () {
+    return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame || window.mozRequestAnimationFrame || function (callback) {
+      return setTimeout(function () {
+        var time = window.performance.now();
+        callback(time);
+      }, 16);
+    };
+  }();
+}());
 (function () {
   'use strict';
   /**
@@ -187,7 +205,7 @@
       };
       return Entity;
     }
-  ]).provider('$entities', MapProvider).provider('$components', MapProvider).provider('$systems', MapProvider).service('ngEcs', function ($log, $timeout, $components, $systems, $entities, Entity) {
+  ]).provider('$entities', MapProvider).provider('$components', MapProvider).provider('$systems', MapProvider).service('ngEcs', function ($rootScope, $log, $timeout, $components, $systems, $entities, Entity) {
     function Ecs(opts) {
       this.components = $components;
       this.systems = $systems;
@@ -201,9 +219,10 @@
         // todo: test this
         this.$e(value);
       });
-      this.$timer = null;
+      //this.$timer = null;
       this.$playing = false;
-      this.$delay = 1000;
+      //this.$delay = 1000;
+      this.$fps = 60;
       this.$interval = 1;
       this.$systemsQueue = [];
       angular.extend(this, opts);
@@ -376,6 +395,17 @@
         }
       }
     };
+    Ecs.prototype.$render = function (time) {
+      var self = this;
+      time = angular.isUndefined(time) ? self.$interval : time;
+      var i = this.$systemsQueue.length, system;
+      while (i--) {
+        system = this.$systemsQueue[i];
+        if (system.$render) {
+          system.$render(time);
+        }
+      }
+    };
     /**
     * @ngdoc service
     * @name hc.ngEcs.ngEcs#$start
@@ -387,13 +417,27 @@
       if (this.$playing) {
         return;
       }
-      var self = this;
-      self.$playing = true;
-      function step() {
-        self.$timer = $timeout(step, self.$delay);
-        self.$update(self.$interval);
+      this.$playing = true;
+      var self = this, now, last = window.performance.now(), dt = 0, DT = 0, step;
+      function frame() {
+        if (!self.$playing) {
+          return;
+        }
+        now = window.performance.now();
+        DT = Math.min(1, (now - last) / 1000);
+        dt = dt + DT;
+        step = 1 / self.$fps;
+        while (dt > step) {
+          dt = dt - step;
+          self.$update(step);
+        }
+        $rootScope.$applyAsync(function () {
+          self.$render(DT);
+        });
+        last = now;
+        requestAnimationFrame(frame);
       }
-      step();
+      requestAnimationFrame(frame);
     };
     /**
     * @ngdoc service
@@ -404,9 +448,6 @@
     */
     Ecs.prototype.$stop = function () {
       this.$playing = false;
-      if (this.$timer) {
-        $timeout.cancel(this.$timer);
-      }
     };
     return new Ecs();
   });
