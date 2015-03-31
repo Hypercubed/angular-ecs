@@ -24,7 +24,7 @@ bower install --save Hypercubed/angular-ecs
 - understand and take advantage of browser optimization
 
 ## Documentation
-(coming soon)
+WIP: http://hypercubed.github.io/angular-ecs
 
 ## Examples
 See: [Hypercubed/Epsilon-Prime](https://github.com/Hypercubed/Epsilon-Prime)
