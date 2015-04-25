@@ -522,4 +522,47 @@ describe('systems', function () {
     expect(ngEcs.systems.system1.$family).toNotBe(ngEcs.systems.system2.$family);
 
   });
+
+  it('should call update', function () {
+    var c = 0;
+
+    ngEcs.$s('test', {
+      $update: function(dt) {
+        c++;
+      }
+    });
+
+    ngEcs.$e({ 'test' :{} }); // needs and entity, with a component (fix this)
+    ngEcs.$update();
+    ngEcs.$update();
+    ngEcs.$update();
+
+    expect($systems.test.$update).toBeDefined();
+    expect(c).toBe(3);
+  });
+
+  it('should call update and updateEach', function () {
+    var c = 0, c2 = 0;
+
+    ngEcs.$s('test', {
+      $update: function(dt) {
+        c++;
+      },
+      $updateEach: function(dt) {
+        c2++;
+      }
+    });
+
+    ngEcs.$e({ 'test' :{} }); // needs and entity, with a component (fix this)
+    ngEcs.$e({ 'test' :{} }); // needs and entity, with a component (fix this)
+
+    ngEcs.$update();
+    ngEcs.$update();
+    ngEcs.$update();
+
+    expect($systems.test.$update).toBeDefined();
+    expect(c).toBe(3);
+    expect(c2).toBe(6);
+  });
+
 });

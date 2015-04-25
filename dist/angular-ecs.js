@@ -15,6 +15,22 @@
       }, 16);
     };
   }();
+  if (!Function.prototype.bind) {
+    Function.prototype.bind = function (oThis) {
+      if (typeof this !== 'function') {
+        // closest thing possible to the ECMAScript 5
+        // internal IsCallable function
+        throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+      }
+      var aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, FNOP = function () {
+        }, fBound = function () {
+          return fToBind.apply(this instanceof FNOP ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+      FNOP.prototype = this.prototype;
+      fBound.prototype = new FNOP();
+      return fBound;
+    };
+  }
 }());
 (function () {
   'use strict';
@@ -262,9 +278,32 @@
       // perhaps add to $systems
       this.systems[key] = instance;
       this.$systemsQueue.unshift(instance);
-      // todo: sort by priority
+      // todo: sort by priority, make scenes list
       var fid = getFamilyIdFromRequire(instance.$require);
       instance.$family = this.families[fid] = this.families[fid] || [];
+      // todo: check existing entities ifany
+      if (instance.$updateEach) {
+        var _update = instance.$update ? instance.$update.bind(instance) : function () {
+          };
+        instance.$update = function (dt) {
+          _update(dt);
+          var i = -1, arr = this.$family, len = arr.length;
+          while (++i < len) {
+            this.$updateEach(arr[i], dt);
+          }
+        };
+      }
+      if (angular.isDefined(instance.interval) && angular.isDefined(instance.$update)) {
+        var __update = instance.$update.bind(instance);
+        instance.acc = angular.isDefined(instance.acc) ? instance.acc : 0;
+        instance.$update = function (dt) {
+          this.acc += dt;
+          if (this.acc > this.interval) {
+            __update(dt);
+            this.acc = this.acc - this.interval;
+          }
+        };
+      }
     };
     /**
     * @ngdoc service
@@ -385,22 +424,20 @@
     * @description Calls the update cycle
     */
     Ecs.prototype.$update = function (time) {
-      var self = this;
-      time = angular.isUndefined(time) ? self.$interval : time;
-      var i = this.$systemsQueue.length, system;
+      time = angular.isUndefined(time) ? this.$interval : time;
+      var arr = this.$systemsQueue, i = arr.length, system;
       while (i--) {
-        system = this.$systemsQueue[i];
+        system = arr[i];
         if (system.$update && system.$family.length > 0) {
           system.$update(time);
         }
       }
     };
     Ecs.prototype.$render = function (time) {
-      var self = this;
-      time = angular.isUndefined(time) ? self.$interval : time;
-      var i = this.$systemsQueue.length, system;
+      time = angular.isUndefined(time) ? this.$interval : time;
+      var arr = this.$systemsQueue, i = arr.length, system;
       while (i--) {
-        system = this.$systemsQueue[i];
+        system = arr[i];
         if (system.$render) {
           system.$render(time);
         }
@@ -431,9 +468,11 @@
           dt = dt - step;
           self.$update(step);
         }
-        $rootScope.$applyAsync(function () {
-          self.$render(DT);
-        });
+        self.$render(DT);
+        $rootScope.$apply();
+        //$rootScope.$applyAsync(function() {
+        //  self.$render(DT);
+        //});
         last = now;
         window.requestAnimationFrame(frame);
       }
