@@ -14,3 +14,5 @@ _\( managed using [todo-md](https://github.com/Hypercubed/todo-md) \)_
 - [x] requestAnimationFrame?
 - [ ] ngECSProvider.config
 - [ ] Maybe git rid of ngEcs service in favor or $xxx Providers ($entities.add(xxx), $systems.add(xxx), ...)
+- [ ] Update Karma/Jasmine
+- [ ] Make ES6 modules

@@ -418,7 +418,7 @@
           _update(dt);
           var i = -1,arr = this.$family,len = arr.length;
           while (++i < len) {
-            this.$updateEach(arr[i],dt);
+            instance.$updateEach(arr[i],dt);
           }
         };
       }
@@ -434,6 +434,8 @@
           }
         };
       }
+
+      return instance;
     };
 
     /**
