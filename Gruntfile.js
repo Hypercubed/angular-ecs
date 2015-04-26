@@ -98,18 +98,24 @@ module.exports = function(grunt) {
         banner: '<%= meta.banner %>'
       },
       dist: {
-        src: ['<%= yo.src %>/<%= pkg.name %>.js'],
-        dest: '<%= yo.dist %>/<%= pkg.name %>.js'
+        expand: true,
+        cwd: '.tmp/concat/',
+        src: '*.js',
+        dest: '<%= yo.dist %>/'
       }
     },
     concat: {
       options: {
         banner: '<%= meta.banner %>',
-        stripBanners: true
+        stripBanners: false
       },
       dist: {
-        src: ['<%= yo.src %>/<%= pkg.name %>.js'],
-        dest: '<%= yo.dist %>/<%= pkg.name %>.js'
+        src: [
+          './<%= yo.src %>/shims.js',
+          './<%= yo.src %>/<%= pkg.name %>.js',
+          './<%= yo.src %>/*.js'
+        ],
+        dest: '.tmp/concat/<%= pkg.name %>.js'
       }
     },
     uglify: {
@@ -157,6 +163,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build', [
     'clean:dist',
+    'concat',
     'ngmin:dist',
     'uglify:dist',
     'ngdocs'

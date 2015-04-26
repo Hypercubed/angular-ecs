@@ -11,13 +11,12 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-    'bower_components/angular/angular.js',
-    'bower_components/jquery/dist/jquery.js',
-    'bower_components/angular-mocks/angular-mocks.js',
-    'bower_components/angular-third-party/dist/angular-third-party.js',
-    'bower_components/eventemitter2/lib/eventemitter2.js',
-    'src/*.js',
-    'test/spec/*.js'
+      'bower_components/angular/angular.js',
+      'bower_components/jquery/dist/jquery.js',
+      'bower_components/angular-mocks/angular-mocks.js',
+      'src/angular-ecs.js',
+      'src/*.js',
+      'test/spec/*.js'
     ],
 
     // list of files to exclude
