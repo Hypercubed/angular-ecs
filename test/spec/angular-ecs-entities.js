@@ -4,6 +4,12 @@ describe('entities', function () {
 
   var ngEcs, $entities;
 
+  var MockComponent, callback;
+
+  function EventComponent(_e) {
+    _e.$on('call', callback);
+  }
+
   beforeEach(module('hc.ngEcs', function() {
 
   }));
@@ -11,6 +17,12 @@ describe('entities', function () {
   beforeEach(inject(function(_ngEcs_, _$entities_){
     ngEcs = _ngEcs_;
     $entities = _$entities_;
+
+    MockComponent = jasmine.createSpy('callback');
+    callback = jasmine.createSpy('callback');
+
+    ngEcs.$c('mockComponent', MockComponent);
+    ngEcs.$c('eventComponent', EventComponent);
   }));
 
   it('should start empty', function () {
@@ -23,7 +35,6 @@ describe('entities', function () {
     expect(Object.keys($entities).length).toBe(1);
     expect($entities[e._id]).toBe(e);
   });
-
 
   it('should create entities with id', function () {
     var e = ngEcs.$e('e1');
@@ -156,14 +167,13 @@ describe('entities', function () {
   }); */
 
   it('should be able to add and emit events', function () {
-    var callback = jasmine.createSpy('callback');
 
     var e = ngEcs.$e();
 
-    e.$on('test',callback);
+    e.$on('call',callback);
 
-    e.$emit('test', 'arg1');
-    e.$emit('test', 'arg2', 'arg3');
+    e.$emit('call', 'arg1');
+    e.$emit('call', 'arg2', 'arg3');
 
     expect(callback).toHaveBeenCalledWith('arg1');
     expect(callback).toHaveBeenCalledWith('arg2','arg3');
@@ -171,37 +181,27 @@ describe('entities', function () {
   });
 
   it('should pass entity to constructor', function () {
-    var MockComponent = jasmine.createSpy('callback');
 
     var e = ngEcs.$e();
 
-    ngEcs.$c('testComponent', MockComponent);
-
-    e.$add('testComponent');
+    e.$add('mockComponent');
 
     expect(MockComponent.calls.length).toBe(1);
     expect(MockComponent).toHaveBeenCalledWith(e);
-    expect(e.testComponent instanceof MockComponent);
-    expect(e.testComponent.prototype === MockComponent.prototype);
+    expect(e.mockComponent instanceof MockComponent);
+    expect(e.mockComponent.prototype === MockComponent.prototype);
   });
 
   it('should be able to add events in constructor', function () {
-    var callback = jasmine.createSpy('callback');
 
-    function TestComponent(_e) {
-      _e.$on('test', callback);
-    }
+    var e = ngEcs.$e(['eventComponent']);
 
-    ngEcs.$c('testComponent', TestComponent);
-
-    var e = ngEcs.$e(['testComponent']);
-
-    e.$emit('test');
-    e.$emit('test');
+    e.$emit('call');
+    e.$emit('call');
 
     expect(callback.calls.length).toBe(2);
-    expect(e.testComponent instanceof TestComponent);
-    expect(e.testComponent.prototype === TestComponent.prototype);
+    expect(e.eventComponent instanceof EventComponent);
+    expect(e.eventComponent.prototype === EventComponent.prototype);
   });
 
 });

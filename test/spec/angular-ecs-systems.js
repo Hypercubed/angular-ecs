@@ -2,54 +2,17 @@
 
 describe('systems', function () {
 
-  var ngEcs, $systems, $entities;
+  var ngEcs, $systems, $entities, $families;
 
   beforeEach(module('hc.ngEcs', function() {
 
   }));
 
-  beforeEach(inject(function(_ngEcs_, _$systems_, _$entities_){
+  beforeEach(inject(function(_ngEcs_, _$systems_, _$entities_, _$families_){
     ngEcs = _ngEcs_;
     $systems = _$systems_;
     $entities = _$entities_;
-  }));
-
-  it('should create systems', function () {
-    ngEcs.$s('test', {});
-    expect($systems.test).toBeDefined();
-    expect($systems).toBe(ngEcs.systems);
-  });
-
-  it('should create systems and assign entities to families', function () {
-    ngEcs.$s('system1', {
-      $require: ['component1']
-    });
-
-    ngEcs.$s('system2', {
-      $require: ['component2']
-    });
-
-    ngEcs.$s('system3', {
-      $require: ['component3']
-    });
-
-    ngEcs.$s('system4', {
-      $require: ['component2','component1']
-    });
-
-    ngEcs.$e(['component1']);
-    ngEcs.$e(['component1','component2']);
-    ngEcs.$e(['component2']);
-    ngEcs.$e(['component2']);
-
-    expect(Object.keys($entities).length).toBe(4);
-    expect(ngEcs.systems.system1.$family.length).toBe(2);
-    expect(ngEcs.systems.system2.$family.length).toBe(3);
-    expect(ngEcs.systems.system3.$family.length).toBe(0);
-    expect(ngEcs.systems.system4.$family.length).toBe(1);
-  });
-
-  it('should call $addEntity', function () {
+    $families = _$families_;
 
     ngEcs.$s('system1', {
       $require: ['component1'],
@@ -70,6 +33,43 @@ describe('systems', function () {
       $require: ['component2','component1'],
       $addEntity: jasmine.createSpy('$addEntity')
     });
+
+    ngEcs.$s('system5', {
+      $require: ['component1'],
+      $addEntity: jasmine.createSpy('$addEntity')
+    });
+
+  }));
+
+  it('should create systems', function () {
+    expect($systems.system1).toBeDefined();
+    expect($systems).toBe(ngEcs.systems);
+  });
+
+  it('should reference family', function () {
+    ngEcs.$s('test', {});
+    expect($systems.test.$family).toBe($families['::']);
+  });
+
+  it('should reference family', function () {
+    expect($systems.system1.$family).toBe($families.component1);
+  });
+
+  it('should create systems and assign entities to families', function () {
+
+    ngEcs.$e(['component1']);
+    ngEcs.$e(['component1','component2']);
+    ngEcs.$e(['component2']);
+    ngEcs.$e(['component2']);
+
+    expect(Object.keys($entities).length).toBe(4);
+    expect($systems.system1.$family.length).toBe(2);
+    expect($systems.system2.$family.length).toBe(3);
+    expect($systems.system3.$family.length).toBe(0);
+    expect($systems.system4.$family.length).toBe(1);
+  });
+
+  it('should call $addEntity', function () {
 
     ngEcs.$e(['component1']);
     ngEcs.$e(['component1','component2']);
@@ -84,26 +84,6 @@ describe('systems', function () {
   });
 
   it('should be able to add components later', function () {
-
-    ngEcs.$s('system1', {
-      $require: ['component1'],
-      $addEntity: jasmine.createSpy('$addEntity')
-    });
-
-    ngEcs.$s('system2', {
-      $require: ['component2'],
-      $addEntity: jasmine.createSpy('$addEntity')
-    });
-
-    ngEcs.$s('system3', {
-      $require: ['component3'],
-      $addEntity: jasmine.createSpy('$addEntity')
-    });
-
-    ngEcs.$s('system4', {
-      $require: ['component2','component1'],
-      $addEntity: jasmine.createSpy('$addEntity')
-    });
 
     var e1 = ngEcs.$e();
     var e2 = ngEcs.$e();
@@ -126,7 +106,7 @@ describe('systems', function () {
     e3.$add('component2');
     e4.$add('component2');
 
-    expect(Object.keys(ngEcs.entities).length).toBe(4);
+    expect(Object.keys($entities).length).toBe(4);
     expect($systems.system1.$family.length).toBe(2);
     expect($systems.system2.$family.length).toBe(3);
     expect($systems.system3.$family.length).toBe(0);
@@ -139,26 +119,6 @@ describe('systems', function () {
   });
 
   it('should be able to remove components', function () {
-    var c1 = 0, c2 = 0, c3 = 0, c4 = 0;
-    ngEcs.$s('system1', {
-      $require: ['component1'],
-      $addEntity: jasmine.createSpy('$addEntity')
-    });
-
-    ngEcs.$s('system2', {
-      $require: ['component2'],
-      $addEntity: jasmine.createSpy('$addEntity')
-    });
-
-    ngEcs.$s('system3', {
-      $require: ['component3'],
-      $addEntity: jasmine.createSpy('$addEntity')
-    });
-
-    ngEcs.$s('system4', {
-      $require: ['component2','component1'],
-      $addEntity: jasmine.createSpy('$addEntity')
-    });
 
     ngEcs.$e(['component1']);
     var e2 = ngEcs.$e(['component1','component2']);
@@ -190,19 +150,7 @@ describe('systems', function () {
 
   it('should reuse families', function () {
 
-    ngEcs.$s('system1', {
-      $require: ['component1']
-    });
-
-    ngEcs.$s('system2', {
-      $require: ['component2']
-    });
-
-    ngEcs.$s('system3', {
-      $require: ['component1']
-    });
-
-    expect($systems.system1.$family).toBe($systems.system3.$family);
+    expect($systems.system1.$family).toBe($systems.system5.$family);
     expect($systems.system1.$family).toNotBe($systems.system2.$family);
 
   });

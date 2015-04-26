@@ -11,13 +11,13 @@
   * @description
   * ECS engine. Contain System, Components, and Entities.
   * */
-  .service('ngEcs', function($rootScope, $log, $timeout, $components, $systems, $entities, Entity) {
+  .service('ngEcs', function($rootScope, $log, $timeout, $components, $systems, $entities, $families, Entity) {
 
     function Ecs(opts) {
       this.components = $components;
       this.systems = $systems;
       this.entities = $entities;
-      this.families = {};  // make $families
+      this.families = $families;
 
       angular.forEach($systems, function(value, key) {  // todo: test this
         this.$s(key, value);

@@ -105,6 +105,8 @@
   * @description
   * Index of systems, systems are generic objects
   * */
-  .provider('$systems', MapProvider);
+  .provider('$systems', MapProvider)
+  
+  .provider('$families', MapProvider);
 
 })();
