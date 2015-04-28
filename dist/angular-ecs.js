@@ -1,6 +1,6 @@
 /**
  * angular-ecs
- * @version v0.0.11 - 2015-04-26
+ * @version v0.0.11 - 2015-04-27
  * @link https://github.com/Hypercubed/angular-ecs
  * @author Jayson Harshbarger <>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -77,7 +77,7 @@
       }
     ];
   }
-  angular.module('hc.ngEcs', []).provider('$entities', MapProvider).provider('$components', MapProvider).provider('$systems', MapProvider);
+  angular.module('hc.ngEcs', []).provider('$entities', MapProvider).provider('$components', MapProvider).provider('$systems', MapProvider).provider('$families', MapProvider);
 }());
 // Entity
 (function () {
@@ -246,13 +246,14 @@
     '$components',
     '$systems',
     '$entities',
+    '$families',
     'Entity',
-    function ($rootScope, $log, $timeout, $components, $systems, $entities, Entity) {
+    function ($rootScope, $log, $timeout, $components, $systems, $entities, $families, Entity) {
       function Ecs(opts) {
         this.components = $components;
         this.systems = $systems;
         this.entities = $entities;
-        this.families = {};
+        this.families = $families;
         angular.forEach($systems, function (value, key) {
           // todo: test this
           this.$s(key, value);
@@ -267,6 +268,7 @@
         this.$fps = 60;
         this.$interval = 1;
         this.$systemsQueue = [];
+        // make $scenes
         angular.extend(this, opts);
       }
       Ecs.prototype.constructor = Ecs;
@@ -288,7 +290,7 @@
         if (!require) {
           return '::';
         }
-        return require.join('::');
+        return require.join('::');  // perhaps sort ids?
       }
       /**
     * @ngdoc service

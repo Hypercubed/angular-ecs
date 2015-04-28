@@ -50,7 +50,7 @@
     * @param {function|object} constructor component constructor or prototype
     */
     Ecs.prototype.$c = function(key, constructor) {  // perhaps add to $components
-      this.components[key] = constructor;
+      $components[key] = constructor;
     };
 
     function getFamilyIdFromRequire(require) {
@@ -69,7 +69,8 @@
     * @param {object} instance system configuration
     */
     Ecs.prototype.$s = function(key, instance) {  // perhaps add to $systems
-      this.systems[key] = instance;
+      $systems[key] = instance;
+
       this.$systemsQueue.unshift(instance);  // todo: sort by priority, make scenes list
       var fid = getFamilyIdFromRequire(instance.$require);
       instance.$family = this.families[fid] = this.families[fid] || [];
@@ -138,21 +139,21 @@
       e.$world = this;
 
       if (Array.isArray(instance)) {
-        angular.forEach(instance, function(key) {
+        instance.forEach(function(key) {
           e.$add(key);
-          //self.$onComponentAdd(e,key);
         });
       } else {
         angular.forEach(instance, function(value, key) {
           e.$add(key, value);
-          //self.$onComponentAdd(e,key);
         });
       }
 
-      //e.$on('add', function(e,k) { self.$onComponentAdd(e,k); });
-      //e.$on('remove', function(e,k) { self.$onComponentRemove(e,k); });
+      onComponentAdded(e);
 
-      this.entities[e._id] = e;
+      e.$on('componentAdded', onComponentAdded);
+      e.$on('componentRemoved', onComponentRemoved);
+
+      $entities[e._id] = e;
       return e;
     };
 
@@ -183,7 +184,7 @@
         }
       });
 
-      angular.forEach(this.families, function(family) {
+      angular.forEach($families, function(family) {
         remove(family, instance);
       });
 
@@ -204,36 +205,42 @@
       return require.every(fn);
     }
 
-    Ecs.prototype.$onComponentAdd = function(entity, key) {
+    function onComponentAdded(entity, key) {
       //$log.debug('$onComponentAdd', entity, key);
-      angular.forEach(this.systems, function(system) {
+      angular.forEach($systems, function(system) {
 
-        if (system.$require && system.$require.indexOf(key) < 0) { return; }
-        if (!matchEntityToFamily(entity, system.$require))  { return; }
+        if (system.$require && key && system.$require.indexOf(key) < 0) { return; }
+        if (matchEntityToFamily(entity, system.$require))  {
 
-        add(system.$family, entity);
+          add(system.$family, entity);
 
-        if (system.$addEntity) {
-          system.$addEntity(entity);
+          if (system.$addEntity) {
+            system.$addEntity(entity);
+          }
+
         }
 
       });
-    };
+    }
 
-    Ecs.prototype.$onComponentRemove = function(entity, key) {
+    function onComponentRemoved(entity, key) {
       //$log.debug('$onComponentRemoved', entity, key);
-      angular.forEach(this.systems, function(system) {
+      angular.forEach($systems, function(system) {
 
-        if (!system.$require || system.$require.indexOf(key) < 0) { return; }
+        if (!system.$require || (key && system.$require.indexOf(key) < 0)) { return; }
 
-        if (system.$removeEntity) {
-          system.$removeEntity(entity);
+        if (matchEntityToFamily(entity, system.$require))  {
+
+          if (system.$removeEntity) {
+            system.$removeEntity(entity);
+          }
+
+          remove(system.$family, entity);
+
         }
 
-        remove(system.$family, entity);
-
       });
-    };
+    }
 
     /**
     * @ngdoc service

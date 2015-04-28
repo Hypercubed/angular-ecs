@@ -147,8 +147,8 @@
         this[key] = instance;
       }
 
-      //this.$$eventEmitter.emit('add', this, key);
-      this.$world.$onComponentAdd(this,key);
+      this.$emit('componentAdded', this, key);
+      //this.$world.$onComponentAdd(this,key);
       return this;
     };
 
@@ -168,12 +168,12 @@
     * @returns {Entity} The entity
     */
     Entity.prototype.$remove = function(key) {
-      delete this[key];
       // not a component by convention
       if (key.charAt(0) !== '$' && key.charAt(0) !== '_') {
-        //this.$$eventEmitter.emit('remove', this, key);
-        this.$world.$onComponentRemove(this,key);
+        this.$emit('componentRemoved', this, key);
+        //this.$world.$onComponentRemove(this,key);
       }
+      delete this[key];
       return this;
     };
 

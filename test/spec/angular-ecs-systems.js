@@ -16,27 +16,32 @@ describe('systems', function () {
 
     ngEcs.$s('system1', {
       $require: ['component1'],
-      $addEntity: jasmine.createSpy('$addEntity')
+      $addEntity: jasmine.createSpy('$addEntity'),
+      $removeEntity: jasmine.createSpy('$removeEntity')
     });
 
     ngEcs.$s('system2', {
       $require: ['component2'],
-      $addEntity: jasmine.createSpy('$addEntity')
+      $addEntity: jasmine.createSpy('$addEntity'),
+      $removeEntity: jasmine.createSpy('$removeEntity')
     });
 
     ngEcs.$s('system3', {
       $require: ['component3'],
-      $addEntity: jasmine.createSpy('$addEntity')
+      $addEntity: jasmine.createSpy('$addEntity'),
+      $removeEntity: jasmine.createSpy('$removeEntity')
     });
 
     ngEcs.$s('system4', {
       $require: ['component2','component1'],
-      $addEntity: jasmine.createSpy('$addEntity')
+      $addEntity: jasmine.createSpy('$addEntity'),
+      $removeEntity: jasmine.createSpy('$removeEntity')
     });
 
     ngEcs.$s('system5', {
       $require: ['component1'],
-      $addEntity: jasmine.createSpy('$addEntity')
+      $addEntity: jasmine.createSpy('$addEntity'),
+      $removeEntity: jasmine.createSpy('$removeEntity')
     });
 
   }));
@@ -81,6 +86,33 @@ describe('systems', function () {
     expect($systems.system2.$addEntity.calls.length).toBe(3);
     expect($systems.system3.$addEntity.calls.length).toBe(0);
     expect($systems.system4.$addEntity.calls.length).toBe(1);
+  });
+
+  it('should call $addEntity with entity', function () {
+
+    var e = ngEcs.$e(['component1','component2']);
+
+    expect($systems.system1.$addEntity).toHaveBeenCalledWith(e);
+
+  });
+
+  it('should call $addEntity with complete entity', function () {
+
+    ngEcs.$s('system6', {
+      $require: ['component1'],
+      $addEntity: function(e) {
+        expect(e.component1).toBeDefined();
+        expect(e.component2).toBeDefined();
+      }
+    });
+
+    var e = ngEcs.$e({
+      component1: { x: 1, y: 2 },
+      component2: { z: 3 }
+    });
+
+    expect($systems.system1.$addEntity).toHaveBeenCalledWith(e);
+
   });
 
   it('should be able to add components later', function () {
@@ -145,7 +177,20 @@ describe('systems', function () {
     expect($systems.system2.$addEntity.calls.length).toBe(3);
     expect($systems.system3.$addEntity.calls.length).toBe(0);
     expect($systems.system4.$addEntity.calls.length).toBe(1);
+    expect($systems.system1.$removeEntity.calls.length).toBe(0);
+    expect($systems.system2.$removeEntity.calls.length).toBe(1);
+    expect($systems.system3.$removeEntity.calls.length).toBe(0);
+    expect($systems.system4.$removeEntity.calls.length).toBe(1);
+  });
 
+  it('should call removeEntity once', function () {
+
+    var e = ngEcs.$e(['component1','component2']);
+
+    e.$remove('component2');
+    e.$remove('component1');
+
+    expect($systems.system4.$removeEntity.calls.length).toBe(1);
   });
 
   it('should reuse families', function () {
