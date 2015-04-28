@@ -21,6 +21,6 @@
   "smarttabs": true,
   "predef": [
     "angular",
-    "spyOn"
+    "signals"
   ]
 }

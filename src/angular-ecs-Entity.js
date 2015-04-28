@@ -24,7 +24,11 @@
       }
       this._id = id || uuid();
 
-      this.$$listeners = {};
+      this.$componentAdded = new signals.Signal();
+      this.$componentRemoved = new signals.Signal();
+
+      this.$$signals = {};
+
     }
 
     /**
@@ -44,19 +48,11 @@
     * @returns {function()} Returns a deregistration function for this listener.
     */
     Entity.prototype.$on = function(name, listener) {
-      var namedListeners = this.$$listeners[name];
-      if (!namedListeners) {
-        this.$$listeners[name] = namedListeners = [];
+      var sig = this.$$signals[name];
+      if (!sig) {
+        this.$$signals[name] = sig = new signals.Signal();
       }
-      namedListeners.push(listener);
-
-      var self = this;
-      return function() {
-        var indexOfListener = namedListeners.indexOf(listener);
-        if (indexOfListener !== -1) {
-          namedListeners[indexOfListener] = null;
-        }
-      };
+      return sig.add(listener, this);
     };
 
     /**
@@ -77,16 +73,16 @@
     * @returns {Entity} The entity
     */
     Entity.prototype.$emit = function(name) {
-      var empty = [],
-        namedListeners,
-        self = this,
-        listenerArgs = Array.prototype.slice.call(arguments, 1),
-        i, length;
+      var sig = this.$$signals[name];
+      if (!sig) {return;}  // throw error?
 
-      namedListeners = self.$$listeners[name] || empty;
-      for (i = 0, length = namedListeners.length; i < length; i++) {
-        namedListeners[i].apply(self, listenerArgs);
+      if (arguments.length > 1) {
+        var args = Array.prototype.slice.call(arguments, 1);
+        sig.dispatch.apply(sig, args);
+      } else {
+        sig.dispatch();
       }
+
       return this;
     };
 
@@ -147,10 +143,14 @@
         this[key] = instance;
       }
 
-      this.$emit('componentAdded', this, key);
+      this.$componentAdded.dispatch(this, key);
       //this.$world.$onComponentAdd(this,key);
       return this;
     };
+
+    function isComponent(key) {
+      return key.charAt(0) !== '$' && key.charAt(0) !== '_';
+    }
 
     /**
     * @ngdoc
@@ -169,9 +169,8 @@
     */
     Entity.prototype.$remove = function(key) {
       // not a component by convention
-      if (key.charAt(0) !== '$' && key.charAt(0) !== '_') {
-        this.$emit('componentRemoved', this, key);
-        //this.$world.$onComponentRemove(this,key);
+      if (isComponent(key)) {
+        this.$componentRemoved.dispatch(this, key);
       }
       delete this[key];
       return this;

@@ -1,6 +1,6 @@
 /**
  * angular-ecs
- * @version v0.0.11 - 2015-04-27
+ * @version v0.0.11 - 2015-04-29
  * @link https://github.com/Hypercubed/angular-ecs
  * @author Jayson Harshbarger <>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -95,7 +95,9 @@
           return new Entity(id);
         }
         this._id = id || uuid();
-        this.$$listeners = {};
+        this.$componentAdded = new signals.Signal();
+        this.$componentRemoved = new signals.Signal();
+        this.$$signals = {};
       }
       /**
     * @ngdoc
@@ -114,18 +116,11 @@
     * @returns {function()} Returns a deregistration function for this listener.
     */
       Entity.prototype.$on = function (name, listener) {
-        var namedListeners = this.$$listeners[name];
-        if (!namedListeners) {
-          this.$$listeners[name] = namedListeners = [];
+        var sig = this.$$signals[name];
+        if (!sig) {
+          this.$$signals[name] = sig = new signals.Signal();
         }
-        namedListeners.push(listener);
-        var self = this;
-        return function () {
-          var indexOfListener = namedListeners.indexOf(listener);
-          if (indexOfListener !== -1) {
-            namedListeners[indexOfListener] = null;
-          }
-        };
+        return sig.add(listener, this);
       };
       /**
     * @ngdoc
@@ -145,10 +140,16 @@
     * @returns {Entity} The entity
     */
       Entity.prototype.$emit = function (name) {
-        var empty = [], namedListeners, self = this, listenerArgs = Array.prototype.slice.call(arguments, 1), i, length;
-        namedListeners = self.$$listeners[name] || empty;
-        for (i = 0, length = namedListeners.length; i < length; i++) {
-          namedListeners[i].apply(self, listenerArgs);
+        var sig = this.$$signals[name];
+        if (!sig) {
+          return;
+        }
+        // throw error?
+        if (arguments.length > 1) {
+          var args = Array.prototype.slice.call(arguments, 1);
+          sig.dispatch.apply(sig, args);
+        } else {
+          sig.dispatch();
         }
         return this;
       };
@@ -204,10 +205,13 @@
         } else {
           this[key] = instance;
         }
-        //this.$$eventEmitter.emit('add', this, key);
-        this.$world.$onComponentAdd(this, key);
+        this.$componentAdded.dispatch(this, key);
+        //this.$world.$onComponentAdd(this,key);
         return this;
       };
+      function isComponent(key) {
+        return key.charAt(0) !== '$' && key.charAt(0) !== '_';
+      }
       /**
     * @ngdoc
     * @name hc.ngEcs.Entity#$remove
@@ -224,12 +228,11 @@
     * @returns {Entity} The entity
     */
       Entity.prototype.$remove = function (key) {
-        delete this[key];
         // not a component by convention
-        if (key.charAt(0) !== '$' && key.charAt(0) !== '_') {
-          //this.$$eventEmitter.emit('remove', this, key);
-          this.$world.$onComponentRemove(this, key);
+        if (isComponent(key)) {
+          this.$componentRemoved.dispatch(this, key);
         }
+        delete this[key];
         return this;
       };
       return Entity;
@@ -268,7 +271,7 @@
         this.$fps = 60;
         this.$interval = 1;
         this.$systemsQueue = [];
-        // make $scenes
+        // make $scenes?  Signal?
         angular.extend(this, opts);
       }
       Ecs.prototype.constructor = Ecs;
@@ -284,7 +287,7 @@
     */
       Ecs.prototype.$c = function (key, constructor) {
         // perhaps add to $components
-        this.components[key] = constructor;
+        $components[key] = constructor;
       };
       function getFamilyIdFromRequire(require) {
         if (!require) {
@@ -304,7 +307,7 @@
     */
       Ecs.prototype.$s = function (key, instance) {
         // perhaps add to $systems
-        this.systems[key] = instance;
+        $systems[key] = instance;
         this.$systemsQueue.unshift(instance);
         // todo: sort by priority, make scenes list
         var fid = getFamilyIdFromRequire(instance.$require);
@@ -368,17 +371,18 @@
         var e = new Entity(id);
         e.$world = this;
         if (Array.isArray(instance)) {
-          angular.forEach(instance, function (key) {
-            e.$add(key);  //self.$onComponentAdd(e,key);
+          instance.forEach(function (key) {
+            e.$add(key);
           });
         } else {
           angular.forEach(instance, function (value, key) {
-            e.$add(key, value);  //self.$onComponentAdd(e,key);
+            e.$add(key, value);
           });
         }
-        //e.$on('add', function(e,k) { self.$onComponentAdd(e,k); });
-        //e.$on('remove', function(e,k) { self.$onComponentRemove(e,k); });
-        this.entities[e._id] = e;
+        onComponentAdded(e);
+        e.$componentAdded.add(onComponentAdded, this);
+        e.$componentRemoved.add(onComponentRemoved, this);
+        $entities[e._id] = e;
         return e;
       };
       function remove(arr, instance) {
@@ -403,7 +407,7 @@
             instance.$remove(key);
           }
         });
-        angular.forEach(this.families, function (family) {
+        angular.forEach($families, function (family) {
           remove(family, instance);
         });
         //instance.$off('remove', this.$onComponentRemove);
@@ -418,33 +422,34 @@
         };
         return require.every(fn);
       }
-      Ecs.prototype.$onComponentAdd = function (entity, key) {
+      function onComponentAdded(entity, key) {
         //$log.debug('$onComponentAdd', entity, key);
-        angular.forEach(this.systems, function (system) {
-          if (system.$require && system.$require.indexOf(key) < 0) {
+        angular.forEach($systems, function (system) {
+          if (system.$require && key && system.$require.indexOf(key) < 0) {
             return;
           }
-          if (!matchEntityToFamily(entity, system.$require)) {
-            return;
-          }
-          add(system.$family, entity);
-          if (system.$addEntity) {
-            system.$addEntity(entity);
+          if (matchEntityToFamily(entity, system.$require)) {
+            add(system.$family, entity);
+            if (system.$addEntity) {
+              system.$addEntity(entity);
+            }
           }
         });
-      };
-      Ecs.prototype.$onComponentRemove = function (entity, key) {
+      }
+      function onComponentRemoved(entity, key) {
         //$log.debug('$onComponentRemoved', entity, key);
-        angular.forEach(this.systems, function (system) {
-          if (!system.$require || system.$require.indexOf(key) < 0) {
+        angular.forEach($systems, function (system) {
+          if (!system.$require || key && system.$require.indexOf(key) < 0) {
             return;
           }
-          if (system.$removeEntity) {
-            system.$removeEntity(entity);
+          if (matchEntityToFamily(entity, system.$require)) {
+            if (system.$removeEntity) {
+              system.$removeEntity(entity);
+            }
+            remove(system.$family, entity);
           }
-          remove(system.$family, entity);
         });
-      };
+      }
       /**
     * @ngdoc service
     * @name hc.ngEcs.ngEcs#$update
@@ -498,10 +503,10 @@
             self.$update(step);
           }
           self.$render(DT);
-          $rootScope.$apply();
-          //$rootScope.$applyAsync(function() {
-          //  self.$render(DT);
-          //});
+          //$rootScope.$apply();
+          $rootScope.$applyAsync(function () {
+            self.$render(DT);
+          });
           last = now;
           window.requestAnimationFrame(frame);
         }

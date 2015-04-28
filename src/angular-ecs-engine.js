@@ -32,7 +32,7 @@
       //this.$delay = 1000;
       this.$fps = 60;
       this.$interval = 1;
-      this.$systemsQueue = [];  // make $scenes
+      this.$systemsQueue = [];  // make $scenes?  Signal?
 
       angular.extend(this, opts);
     }
@@ -150,8 +150,8 @@
 
       onComponentAdded(e);
 
-      e.$on('componentAdded', onComponentAdded);
-      e.$on('componentRemoved', onComponentRemoved);
+      e.$componentAdded.add(onComponentAdded, this);
+      e.$componentRemoved.add(onComponentRemoved, this);
 
       $entities[e._id] = e;
       return e;
@@ -210,6 +210,7 @@
       angular.forEach($systems, function(system) {
 
         if (system.$require && key && system.$require.indexOf(key) < 0) { return; }
+
         if (matchEntityToFamily(entity, system.$require))  {
 
           add(system.$family, entity);
@@ -300,10 +301,10 @@
           self.$update(step);
         }
         self.$render(DT);
-        $rootScope.$apply();
-        //$rootScope.$applyAsync(function() {
-        //  self.$render(DT);
-        //});
+        //$rootScope.$apply();
+        $rootScope.$applyAsync(function() {
+          self.$render(DT);
+        });
         last = now;
         window.requestAnimationFrame(frame);
       }
