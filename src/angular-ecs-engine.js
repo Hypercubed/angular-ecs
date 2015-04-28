@@ -300,7 +300,7 @@
           dt = dt - step;
           self.$update(step);
         }
-        self.$render(DT);
+        //self.$render(DT);
         //$rootScope.$apply();
         $rootScope.$applyAsync(function() {
           self.$render(DT);
