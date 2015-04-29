@@ -11,7 +11,7 @@
   * @description
   * ECS engine. Contain System, Components, and Entities.
   * */
-  .service('ngEcs', function($rootScope, $log, $timeout, $components, $systems, $entities, $families, Entity) {
+  .service('ngEcs', function($rootScope, $log, $timeout, $components, $systems, $entities, $families, Entity, Family) {
 
     function Ecs(opts) {
       this.components = $components;
@@ -53,9 +53,13 @@
       $components[key] = constructor;
     };
 
-    function getFamilyIdFromRequire(require) {
-      if (!require) { return '::'; }
-      return require.join('::');  // perhaps sort ids?
+    function getFamily(require) {
+      var id = Family.makeId(require);
+      var fam = $families[id];
+      if (fam) { return fam; }
+      fam = $families[id] = new Family(require);
+
+      return fam;
     }
 
     /**
@@ -72,9 +76,16 @@
       $systems[key] = instance;
 
       this.$systemsQueue.unshift(instance);  // todo: sort by priority, make scenes list
-      var fid = getFamilyIdFromRequire(instance.$require);
-      instance.$family = this.families[fid] = this.families[fid] || [];
-      // todo: check existing entities ifany
+
+      instance.$family = getFamily(instance.$require);  // todo: later only store id?
+
+      if (instance.$addEntity) {
+        instance.$family.entityAdded.add(instance.$addEntity);
+      }
+
+      if (instance.$removeEntity) {
+        instance.$family.entityRemoved.add(instance.$removeEntity);
+      }
 
       if (instance.$updateEach) {
         var _update = (instance.$update) ? instance.$update.bind(instance) : function() {};
@@ -157,89 +168,38 @@
       return e;
     };
 
-    function remove(arr, instance) {  // maybe move to a class prototype?
-      var index = arr.indexOf(instance);
-      if (index > -1) {
-        arr.splice(index,1);
-      }
-    }
+    Ecs.prototype.$$removeEntity = function(e) {
 
-    function add(arr, instance) {
-      var index = arr.indexOf(instance);
-      if (index < 0) {
-        arr.push(instance);
-      }
-    }
+      e.$world = null;
 
-    Ecs.prototype.$$removeEntity = function(instance) {
-      //var self = this;
-
-      instance.$world = null;
-
-      //instance.$off('add', this.$onComponentAdd);
-
-      angular.forEach(instance, function(value, key) {
+      angular.forEach(e, function(value, key) {
         if (key.charAt(0) !== '$' && key.charAt(0) !== '_') {
-          instance.$remove(key);
+          e.$remove(key);
         }
       });
 
       angular.forEach($families, function(family) {
-        remove(family, instance);
+        family.remove(e);
       });
 
-      //instance.$off('remove', this.$onComponentRemove);
+      e.$componentAdded.dispose();
+      e.$componentRemoved.dispose();
 
-      delete this.entities[instance._id];
+      delete this.entities[e._id];
 
     };
 
-    function matchEntityToFamily(entity, require) {
-      if (!require) {
-        return true;
-      }
-
-      var fn = function(d) {
-        return entity.hasOwnProperty(d);
-      };
-      return require.every(fn);
-    }
-
     function onComponentAdded(entity, key) {
-      //$log.debug('$onComponentAdd', entity, key);
-      angular.forEach($systems, function(system) {
-
-        if (system.$require && key && system.$require.indexOf(key) < 0) { return; }
-
-        if (matchEntityToFamily(entity, system.$require))  {
-
-          add(system.$family, entity);
-
-          if (system.$addEntity) {
-            system.$addEntity(entity);
-          }
-
-        }
-
+      angular.forEach($families, function(family) {
+        if (family.require && key && family.require.indexOf(key) < 0) { return; }
+        family.addIfMatch(entity);
       });
     }
 
     function onComponentRemoved(entity, key) {
-      //$log.debug('$onComponentRemoved', entity, key);
-      angular.forEach($systems, function(system) {
-
-        if (!system.$require || (key && system.$require.indexOf(key) < 0)) { return; }
-
-        if (matchEntityToFamily(entity, system.$require))  {
-
-          if (system.$removeEntity) {
-            system.$removeEntity(entity);
-          }
-
-          remove(system.$family, entity);
-
-        }
-
+      angular.forEach($families, function(family) {
+        if (!family.require || (key && family.require.indexOf(key) < 0)) { return; }
+        family.removeIfMatch(entity);
       });
     }
 

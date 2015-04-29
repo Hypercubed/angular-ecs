@@ -239,6 +239,74 @@
     }
   ]);
 }());
+// Entity
+(function () {
+  'use strict';
+  function Family(require) {
+    var _this = [];
+    Object.defineProperty(_this, 'require', {
+      enumerable: false,
+      value: require
+    });
+    Object.defineProperty(_this, 'entityAdded', {
+      enumerable: false,
+      value: new signals.Signal()
+    });
+    Object.defineProperty(_this, 'entityRemoved', {
+      enumerable: false,
+      value: new signals.Signal()
+    });
+    for (var method in Family.prototype) {
+      if (Family.prototype.hasOwnProperty(method)) {
+        Object.defineProperty(_this, method, {
+          enumerable: false,
+          value: Family.prototype[method]
+        });
+      }
+    }
+    return _this;
+  }
+  Family.prototype.isMatch = function (entity) {
+    if (!this.require) {
+      return true;
+    }
+    return this.require.every(function (d) {
+      return entity.hasOwnProperty(d);
+    });
+  };
+  Family.prototype.add = function (e) {
+    // check if match?
+    var index = this.indexOf(e);
+    if (index < 0) {
+      this.push(e);
+      this.entityAdded.dispatch(e);
+    }
+  };
+  Family.prototype.addIfMatch = function (e) {
+    if (this.isMatch(e)) {
+      this.add(e);
+    }
+  };
+  Family.prototype.remove = function (e) {
+    var index = this.indexOf(e);
+    if (index > -1) {
+      this.splice(index, 1);
+      this.entityRemoved.dispatch(e);
+    }
+  };
+  Family.prototype.removeIfMatch = function (e) {
+    if (this.isMatch(e)) {
+      this.remove(e);
+    }
+  };
+  Family.makeId = function (require) {
+    if (!require) {
+      return '::';
+    }
+    return require.sort().join('::');
+  };
+  angular.module('hc.ngEcs').constant('Family', Family);
+}());
 // engine
 (function () {
   'use strict';
@@ -251,7 +319,8 @@
     '$entities',
     '$families',
     'Entity',
-    function ($rootScope, $log, $timeout, $components, $systems, $entities, $families, Entity) {
+    'Family',
+    function ($rootScope, $log, $timeout, $components, $systems, $entities, $families, Entity, Family) {
       function Ecs(opts) {
         this.components = $components;
         this.systems = $systems;
@@ -289,11 +358,14 @@
         // perhaps add to $components
         $components[key] = constructor;
       };
-      function getFamilyIdFromRequire(require) {
-        if (!require) {
-          return '::';
+      function getFamily(require) {
+        var id = Family.makeId(require);
+        var fam = $families[id];
+        if (fam) {
+          return fam;
         }
-        return require.join('::');  // perhaps sort ids?
+        fam = $families[id] = new Family(require);
+        return fam;
       }
       /**
     * @ngdoc service
@@ -310,9 +382,14 @@
         $systems[key] = instance;
         this.$systemsQueue.unshift(instance);
         // todo: sort by priority, make scenes list
-        var fid = getFamilyIdFromRequire(instance.$require);
-        instance.$family = this.families[fid] = this.families[fid] || [];
-        // todo: check existing entities ifany
+        instance.$family = getFamily(instance.$require);
+        // todo: later only store id?
+        if (instance.$addEntity) {
+          instance.$family.entityAdded.add(instance.$addEntity);
+        }
+        if (instance.$removeEntity) {
+          instance.$family.entityRemoved.add(instance.$removeEntity);
+        }
         if (instance.$updateEach) {
           var _update = instance.$update ? instance.$update.bind(instance) : function () {
             };
@@ -385,69 +462,34 @@
         $entities[e._id] = e;
         return e;
       };
-      function remove(arr, instance) {
-        // maybe move to a class prototype?
-        var index = arr.indexOf(instance);
-        if (index > -1) {
-          arr.splice(index, 1);
-        }
-      }
-      function add(arr, instance) {
-        var index = arr.indexOf(instance);
-        if (index < 0) {
-          arr.push(instance);
-        }
-      }
-      Ecs.prototype.$$removeEntity = function (instance) {
-        //var self = this;
-        instance.$world = null;
-        //instance.$off('add', this.$onComponentAdd);
-        angular.forEach(instance, function (value, key) {
+      Ecs.prototype.$$removeEntity = function (e) {
+        e.$world = null;
+        angular.forEach(e, function (value, key) {
           if (key.charAt(0) !== '$' && key.charAt(0) !== '_') {
-            instance.$remove(key);
+            e.$remove(key);
           }
         });
         angular.forEach($families, function (family) {
-          remove(family, instance);
+          family.remove(e);
         });
-        //instance.$off('remove', this.$onComponentRemove);
-        delete this.entities[instance._id];
+        e.$componentAdded.dispose();
+        e.$componentRemoved.dispose();
+        delete this.entities[e._id];
       };
-      function matchEntityToFamily(entity, require) {
-        if (!require) {
-          return true;
-        }
-        var fn = function (d) {
-          return entity.hasOwnProperty(d);
-        };
-        return require.every(fn);
-      }
       function onComponentAdded(entity, key) {
-        //$log.debug('$onComponentAdd', entity, key);
-        angular.forEach($systems, function (system) {
-          if (system.$require && key && system.$require.indexOf(key) < 0) {
+        angular.forEach($families, function (family) {
+          if (family.require && key && family.require.indexOf(key) < 0) {
             return;
           }
-          if (matchEntityToFamily(entity, system.$require)) {
-            add(system.$family, entity);
-            if (system.$addEntity) {
-              system.$addEntity(entity);
-            }
-          }
+          family.addIfMatch(entity);
         });
       }
       function onComponentRemoved(entity, key) {
-        //$log.debug('$onComponentRemoved', entity, key);
-        angular.forEach($systems, function (system) {
-          if (!system.$require || key && system.$require.indexOf(key) < 0) {
+        angular.forEach($families, function (family) {
+          if (!family.require || key && family.require.indexOf(key) < 0) {
             return;
           }
-          if (matchEntityToFamily(entity, system.$require)) {
-            if (system.$removeEntity) {
-              system.$removeEntity(entity);
-            }
-            remove(system.$family, entity);
-          }
+          family.removeIfMatch(entity);
         });
       }
       /**

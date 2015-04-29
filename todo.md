@@ -2,17 +2,12 @@
 
 _\( managed using [todo-md](https://github.com/Hypercubed/todo-md) \)_
 
-- [-] Tests
-- [-] Documentation
-- [-] System priority
-- [-] Fix grunt bump
+- [-] Switch to gulp
 - [ ] $world -> $engine?
-- [-] Remove event emmiters?
 - [ ] Formalize component constructor function ComponentConstructor($parent)?
-- [ ] Convert to es6/typescript?
-- [ ] Add $destroy function?
-- [x] requestAnimationFrame?
+- [ ] Use babel? ES6 modules?
+- [ ] Add ecs.$destroy function?
 - [ ] ngECSProvider.config
 - [ ] Maybe git rid of ngEcs service in favor or $xxx Providers ($entities.add(xxx), $systems.add(xxx), ...)
 - [ ] Update Karma/Jasmine
-- [ ] Make ES6 modules
+- [ ]  Use BoostArray?

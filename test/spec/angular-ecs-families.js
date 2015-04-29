@@ -54,7 +54,7 @@ describe('families', function () {
     expect($families.component1.length).toBe(2);
     expect($families.component2.length).toBe(3);
     expect($families.component3.length).toBe(0);
-    expect($families['component2::component1'].length).toBe(1);
+    expect($families['component1::component2'].length).toBe(1);
   });
 
   it('should be able to add components later', function () {
@@ -68,7 +68,7 @@ describe('families', function () {
     expect($families.component1.length).toBe(0);
     expect($families.component2.length).toBe(0);
     expect($families.component3.length).toBe(0);
-    expect($families['component2::component1'].length).toBe(0);
+    expect($families['component1::component2'].length).toBe(0);
 
     e1.$add('component1');
     e2.$add('component1');
@@ -80,7 +80,7 @@ describe('families', function () {
     expect($families.component1.length).toBe(2);
     expect($families.component2.length).toBe(3);
     expect($families.component3.length).toBe(0);
-    expect($families['component2::component1'].length).toBe(1);
+    expect($families['component1::component2'].length).toBe(1);
 
   });
 
@@ -95,14 +95,14 @@ describe('families', function () {
     expect($families.component1.length).toBe(2);
     expect($families.component2.length).toBe(3);
     expect($families.component3.length).toBe(0);
-    expect($families['component2::component1'].length).toBe(1);
+    expect($families['component1::component2'].length).toBe(1);
 
     e2.$remove('component2');
 
     expect($families.component1.length).toBe(2);
     expect($families.component2.length).toBe(2);
     expect($families.component3.length).toBe(0);
-    expect($families['component2::component1'].length).toBe(0);
+    expect($families['component1::component2'].length).toBe(0);
 
   });
 
