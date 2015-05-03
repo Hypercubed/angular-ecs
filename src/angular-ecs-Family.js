@@ -4,24 +4,51 @@
   'use strict';
 
   /**
-  * @ngdoc service
-  * @name hc.ngEcs.Family
+  * @ngdoc object
+  * @name hc.ngEcs.Family:family
   * @description
-  * An Family is array of game entities matching a list of required components.
-  * */
+  * A Family is array of game entities matching a list of required components.
+  *
+  **/
+
   function Family(require) {
     var _this = [];
 
+    /**
+    * @ngdoc
+    * @name hc.ngEcs.Family:family#require
+    * @propertyOf hc.ngEcs.Family:family
+    *
+    * @description
+    * An array of component requirements of this family
+    */
     Object.defineProperty(_this, 'require', {
       enumerable: false,
+      writable: false,
       value: require
     });
 
+    /**
+    * @ngdoc
+    * @name hc.ngEcs.Family#entityAdded
+    * @propertyOf hc.ngEcs.Family:family
+    *
+    * @description
+    * A signal dispatched when an entity is added
+    */
     Object.defineProperty(_this, 'entityAdded', {
       enumerable: false,
       value: new signals.Signal()
     });
 
+    /**
+    * @ngdoc
+    * @name hc.ngEcs.Family#entityRemoved
+    * @propertyOf hc.ngEcs.Family:family
+    *
+    * @description
+    * A signal dispatched when an entity is removed
+    */
     Object.defineProperty(_this, 'entityRemoved', {
       enumerable: false,
       value: new signals.Signal()
@@ -39,6 +66,16 @@
     return _this;
   }
 
+  /**
+  * @ngdoc
+  * @name hc.ngEcs.Family#isMatch
+  * @methodOf hc.ngEcs.Family:family
+  * @param {object} entity the entity to test match.
+  * @returns {boolean} True if the entity matches this family
+  *
+  * @description
+  * Tests if the entity matches the family requirements
+  */
   Family.prototype.isMatch = function(entity) {
     if (!this.require) { return true; }
 
@@ -47,6 +84,15 @@
     });
   };
 
+  /**
+  * @ngdoc
+  * @name hc.ngEcs.Family#add
+  * @methodOf hc.ngEcs.Family:family
+  * @param {object} entity the entity to add.
+  *
+  * @description
+  * Adds an entity to this family
+  */
   Family.prototype.add = function(e) {
     // check if match?
     var index = this.indexOf(e);
@@ -56,12 +102,30 @@
     }
   };
 
+  /**
+  * @ngdoc
+  * @name hc.ngEcs.Family#addIfMatch
+  * @methodOf hc.ngEcs.Family:family
+  * @param {object} entity the entity to add if it matches the family requirements
+  *
+  * @description
+  * Adds an entity to this family if entity matches requirements
+  */
   Family.prototype.addIfMatch = function(e) {
     if (this.isMatch(e)) {
       this.add(e);
     }
   };
 
+  /**
+  * @ngdoc
+  * @name hc.ngEcs.Family#remove
+  * @methodOf hc.ngEcs.Family:family
+  * @param {object} entity the entity to remove
+  *
+  * @description
+  * Removes an entity from this family
+  */
   Family.prototype.remove = function(e) {
     var index = this.indexOf(e);
     if (index > -1) {
@@ -70,6 +134,15 @@
     }
   };
 
+  /**
+  * @ngdoc
+  * @name hc.ngEcs.Family#removeIfMatch
+  * @methodOf hc.ngEcs.Family:family
+  * @param {object} entity the entity to remove if it matches the family requirements
+  *
+  * @description
+  * Removes an entity from this family if entity matches requirements
+  */
   Family.prototype.removeIfMatch = function(e) {
     if (this.isMatch(e)) {
       this.remove(e);
@@ -82,6 +155,14 @@
   };
 
   angular.module('hc.ngEcs')
+
+    /**
+    * @ngdoc object
+    * @name hc.ngEcs.Family
+    * @description
+    * {@link hc.ngEcs.Family:family Family} factory.
+    *
+    * */
     .constant('Family', Family);
 
 

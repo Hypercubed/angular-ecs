@@ -47,7 +47,7 @@
   * @ngdoc service
   * @name hc.ngEcs.$entities
   * @description
-  * Index of entities, entities are instances of Entity
+  * Index of {@link hc.ngEcs.Entity:entity entities}.
   **/
   .provider('$entities', MapProvider)
 
@@ -107,6 +107,12 @@
   * */
   .provider('$systems', MapProvider)
 
+  /**
+  * @ngdoc service
+  * @name hc.ngEcs.$families
+  * @description
+  * Index of {@link hc.ngEcs.Family:family families}, a family is an array of game entities matching a list of required components.
+  * */
   .provider('$families', MapProvider);
 
 })();

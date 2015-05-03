@@ -8,6 +8,12 @@
   /**
   * @ngdoc service
   * @name hc.ngEcs.ngEcs
+  * @requires hc.ngEcs.$components
+  * @requires hc.ngEcs.$systems
+  * @requires hc.ngEcs.$entities
+  * @requires hc.ngEcs.$families
+  * @requires hc.ngEcs.Entity
+  * @requires hc.ngEcs.Family
   * @description
   * ECS engine. Contain System, Components, and Entities.
   * */
@@ -33,6 +39,9 @@
       this.$fps = 60;
       this.$interval = 1;
       this.$systemsQueue = [];  // make $scenes?  Signal?
+      
+      this.started = new signals.Signal();
+      this.stopped = new signals.Signal();
 
       angular.extend(this, opts);
     }
@@ -72,36 +81,36 @@
     * @param {string} key system key
     * @param {object} instance system configuration
     */
-    Ecs.prototype.$s = function(key, instance) {  // perhaps add to $systems
-      $systems[key] = instance;
+    Ecs.prototype.$s = function(key, system) {  // perhaps add to $systems
+      $systems[key] = system;
 
-      this.$systemsQueue.unshift(instance);  // todo: sort by priority, make scenes list
+      this.$systemsQueue.unshift(system);  // todo: sort by priority, make scenes list
 
-      instance.$family = getFamily(instance.$require);  // todo: later only store id?
+      system.$family = getFamily(system.$require);  // todo: later only store id?
 
-      if (instance.$addEntity) {
-        instance.$family.entityAdded.add(instance.$addEntity);
+      if (system.$addEntity) {
+        system.$family.entityAdded.add(system.$addEntity, system);
       }
 
-      if (instance.$removeEntity) {
-        instance.$family.entityRemoved.add(instance.$removeEntity);
+      if (system.$removeEntity) {
+        system.$family.entityRemoved.add(system.$removeEntity, system);
       }
 
-      if (instance.$updateEach) {
-        var _update = (instance.$update) ? instance.$update.bind(instance) : function() {};
-        instance.$update = function(dt) {
+      if (system.$updateEach) {
+        var _update = (system.$update) ? system.$update.bind(system) : function() {};
+        system.$update = function(dt) {
           _update(dt);
           var i = -1,arr = this.$family,len = arr.length;
           while (++i < len) {
-            instance.$updateEach(arr[i],dt);
+            system.$updateEach(arr[i],dt);
           }
         };
       }
 
-      if (angular.isDefined(instance.interval) && angular.isDefined(instance.$update)) {
-        var __update = instance.$update.bind(instance);
-        instance.acc = angular.isDefined(instance.acc) ? instance.acc : 0;
-        instance.$update = function(dt) {
+      if (angular.isDefined(system.interval) && angular.isDefined(system.$update)) {
+        var __update = system.$update.bind(system);
+        system.acc = system.isDefined(system.acc) ? system.acc : 0;
+        system.$update = function(dt) {
           this.acc += dt;
           if (this.acc > this.interval) {
             __update(dt);
@@ -109,8 +118,20 @@
           }
         };
       }
+      
+      if (angular.isDefined(system.$started)) {
+        this.started.add(system.$started, system);
+      }
+      
+      if (angular.isDefined(system.$stopped)) {
+        this.stopped.add(system.$stopped, system);
+      }
+      
+      if (angular.isDefined(system.$added)) {
+        system.$added();
+      }
 
-      return instance;
+      return system;
     };
 
     /**
@@ -269,6 +290,7 @@
         window.requestAnimationFrame(frame);
       }
 
+      self.started.dispatch();
       window.requestAnimationFrame(frame);
     };
 
@@ -281,6 +303,7 @@
     */
     Ecs.prototype.$stop = function() {
       this.$playing = false;
+      this.stopped.dispatch();
     };
 
     return new Ecs();

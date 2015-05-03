@@ -8,9 +8,12 @@
   /**
   * @ngdoc service
   * @name hc.ngEcs.Entity
+  * @requires hc.ngEcs.$components
   * @description
-  * An Entity is bag of game properties (components).  By convention properties that do not start with a $ or _ are considered compoenets.
+  * {@link hc.ngEcs.Entity:entity Entity} factory..
+  *
   * */
+
   .factory('Entity', function($components) {
     var _uuid = 0;
     function uuid() {
@@ -18,6 +21,12 @@
       return '' + _uuid++ + '_' + timestamp;
     }
 
+    /**
+    * @ngdoc object
+    * @name hc.ngEcs.Entity:entity
+    * @description
+    * An Entity is bag of game properties (components).  By convention properties that do not start with a $ or _ are considered compoenets.
+    * */
     function Entity(id) {
       if(false === (this instanceof Entity)) {
         return new Entity(id);
@@ -33,8 +42,8 @@
 
     /**
     * @ngdoc
-    * @name hc.ngEcs.Entity#$on
-    * @methodOf hc.ngEcs.Entity
+    * @name hc.ngEcs.Entity:entity#$on
+    * @methodOf hc.ngEcs.Entity:entity
     *
     * @description
     * Adds an event listener to the entity
@@ -57,8 +66,8 @@
 
     /**
     * @ngdoc
-    * @name hc.ngEcs.Entity#$emit
-    * @methodOf hc.ngEcs.Entity
+    * @name hc.ngEcs.Entity:entity#$emit
+    * @methodOf hc.ngEcs.Entity:entity
     *
     * @description
     * Dispatches an event `name` calling notifying
@@ -88,8 +97,8 @@
 
     /**
       * @ngdoc
-      * @name hc.ngEcs.Entity#$add
-      * @methodOf hc.ngEcs.Entity
+      * @name hc.ngEcs.Entity:entity#$add
+      * @methodOf hc.ngEcs.Entity:entity
       *
       * @description
       * Adds a Component to the entity
@@ -154,8 +163,8 @@
 
     /**
     * @ngdoc
-    * @name hc.ngEcs.Entity#$remove
-    * @methodOf hc.ngEcs.Entity
+    * @name hc.ngEcs.Entity:entity#$remove
+    * @methodOf hc.ngEcs.Entity:entity
     *
     * @description
     * Removes a component from the entity

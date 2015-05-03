@@ -2,12 +2,12 @@
 
 _\( managed using [todo-md](https://github.com/Hypercubed/todo-md) \)_
 
-- [-] Switch to gulp
+- [x] Switch to gulp
 - [ ] $world -> $engine?
 - [ ] Formalize component constructor function ComponentConstructor($parent)?
 - [ ] Use babel? ES6 modules?
 - [ ] Add ecs.$destroy function?
 - [ ] ngECSProvider.config
 - [ ] Maybe git rid of ngEcs service in favor or $xxx Providers ($entities.add(xxx), $systems.add(xxx), ...)
-- [ ] Update Karma/Jasmine
-- [ ]  Use BoostArray?
+- [ ] Update Jasmine
+- [ ] Use BoostArray?
