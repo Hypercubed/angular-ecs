@@ -131,7 +131,7 @@ gulp.task('bump-version', function () {
 
 gulp.task('commit-changes', function () {
 	return gulp.src('.')
-		.pipe(git.commit('Version number', {args: '-a'}));
+		.pipe(git.commit('Version number', {quiet: false, args: '-a', disableAppendPaths: true}));
 });
 
 gulp.task('push-changes', function (cb) {
