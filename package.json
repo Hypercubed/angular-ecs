@@ -1,6 +1,6 @@
 {
   "name": "angular-ecs",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "An ECS framework built for AngularJS",
   "keywords": [
     "angular",
@@ -48,6 +48,7 @@
     "gulp-git": "~1.2.1",
     "gulp-ng-annotate": "~0.5.2",
     "gulp-babel": "~5.1.0",
-    "gulp-ngdocs": "~0.2.10"
+    "gulp-ngdocs": "~0.2.10",
+    "gulp-gh-pages": "~0.5.1"
   }
 }

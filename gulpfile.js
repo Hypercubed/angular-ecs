@@ -18,7 +18,8 @@ var connect = require('gulp-connect'),
 	git = require('gulp-git'),
 	fs = require('fs'),
 	runSequence = require('run-sequence'),
-	babel = require('gulp-babel');
+	babel = require('gulp-babel'),
+  ghPages = require('gulp-gh-pages');
 
 // options
 var pkg = require('./package.json');
@@ -153,7 +154,7 @@ gulp.task('create-new-tag', function (cb) {
 
 });
 
-gulp.task('release', function (callback) {
+gulp.task('release', ['build'], function (callback) {
 	runSequence(
 		'bump-version',
 		'commit-changes',
@@ -176,6 +177,11 @@ gulp.task('ngdocs', [], function () {
 		}))
 		.pipe(gulp.dest('./docs'))
 		.pipe(connect.reload());
+});
+
+gulp.task('deploy', ['ngdocs'], function() {
+  return gulp.src('./docs/**/*')
+    .pipe(ghPages());
 });
 
 gulp.task('build', ['clean', 'scripts-build', 'scripts-min']);
