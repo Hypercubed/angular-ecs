@@ -18,8 +18,8 @@ NG_DOCS={
       "shortName": "hc.ngEcs.$components",
       "type": "service",
       "moduleName": "hc.ngEcs",
-      "shortDescription": "Index of components",
-      "keywords": "$components api components hc ngecs service"
+      "shortDescription": "Index of components, components are object constructors",
+      "keywords": "$components api components constructors hc ngecs object service"
     },
     {
       "section": "api",
@@ -36,8 +36,17 @@ NG_DOCS={
       "shortName": "hc.ngEcs.$entities",
       "type": "service",
       "moduleName": "hc.ngEcs",
-      "shortDescription": "Index of entities",
-      "keywords": "$entities api entities hc ngecs service"
+      "shortDescription": "Index of entities.",
+      "keywords": "$entities api entities entity hc ngecs service"
+    },
+    {
+      "section": "api",
+      "id": "hc.ngEcs.$families",
+      "shortName": "hc.ngEcs.$families",
+      "type": "service",
+      "moduleName": "hc.ngEcs",
+      "shortDescription": "Index of families, a family is an array of game entities matching a list of required components.",
+      "keywords": "$families api array components entities families family game hc list matching ngecs required service"
     },
     {
       "section": "api",
@@ -45,8 +54,8 @@ NG_DOCS={
       "shortName": "hc.ngEcs.$systems",
       "type": "service",
       "moduleName": "hc.ngEcs",
-      "shortDescription": "Index of systems",
-      "keywords": "$systems api hc ngecs service systems"
+      "shortDescription": "Index of systems, systems are generic objects",
+      "keywords": "$systems api generic hc ngecs objects service systems"
     },
     {
       "section": "api",
@@ -63,8 +72,35 @@ NG_DOCS={
       "shortName": "hc.ngEcs.Entity",
       "type": "service",
       "moduleName": "hc.ngEcs",
+      "shortDescription": "Entity factory..",
+      "keywords": "$components api entity factory hc ngecs service"
+    },
+    {
+      "section": "api",
+      "id": "hc.ngEcs.Entity:entity",
+      "shortName": "entity",
+      "type": "object",
+      "moduleName": "hc.ngEcs",
       "shortDescription": "An Entity is bag of game properties (components).  By convention properties that do not start with a $ or _ are considered compoenets.",
-      "keywords": "$add $emit $on $remove adds api args arguments bag call calling compoenets compoent component configuration considered convention deregistration dispatches emit emitted entity event function game hc instance key listen listener listeners ngecs notifying optional passed position properties registered removes returns service start upgrade"
+      "keywords": "$add $emit $on $remove adds api args arguments bag call calling compoenets compoent component configuration considered convention deregistration dispatches emit emitted entity event function game hc instance key listen listener listeners ngecs notifying object optional passed position properties registered removes returns start upgrade"
+    },
+    {
+      "section": "api",
+      "id": "hc.ngEcs.Family",
+      "shortName": "hc.ngEcs.Family",
+      "type": "object",
+      "moduleName": "hc.ngEcs",
+      "shortDescription": "Family factory.",
+      "keywords": "api factory family hc ngecs object"
+    },
+    {
+      "section": "api",
+      "id": "hc.ngEcs.Family:family",
+      "shortName": "family",
+      "type": "object",
+      "moduleName": "hc.ngEcs",
+      "shortDescription": "A Family is array of game entities matching a list of required components.",
+      "keywords": "add addifmatch adds api array component components dispatched entities entity entityadded entityremoved family game hc ismatch list match matches matching ngecs object remove removed removeifmatch removes require required requirements signal test tests true"
     },
     {
       "section": "api",
@@ -73,16 +109,42 @@ NG_DOCS={
       "type": "service",
       "moduleName": "hc.ngEcs",
       "shortDescription": "ECS engine. Contain System, Components, and Entities.",
-      "keywords": "$c $e $s $start $stop $update adds api array calls collision component components config configuration control contructor creates cycle ecs engine entities entity game hc instance key loop ngecs object player position prototype service starts stops system update"
+      "keywords": "$c $components $e $entities $families $s $start $stop $systems $update adds api array calls collision component components config configuration control contructor creates cycle ecs engine entities entity family game hc instance key loop ngecs object player position prototype service starts stops system update"
     }
   ],
   "apis": {
     "api": true
   },
+  "__file": "_FAKE_DEST_/js/docs-setup.js",
+  "__options": {
+    "startPage": "/api",
+    "scripts": [
+      "js/angular.min.js",
+      "js/angular-animate.min.js",
+      "js/marked.js",
+      "js/prettify.js"
+    ],
+    "styles": [],
+    "title": "API Documentation",
+    "html5Mode": false,
+    "editExample": true,
+    "navTemplate": false,
+    "navContent": "",
+    "navTemplateData": {},
+    "loadDefaults": {
+      "angular": true,
+      "angularAnimate": true,
+      "marked": true,
+      "prettify": true
+    }
+  },
   "html5Mode": false,
   "editExample": true,
   "startPage": "/api",
   "scripts": [
-    "angular.min.js"
+    "angular.min.js",
+    "angular-animate.min.js",
+    "marked.js",
+    "prettify.js"
   ]
 };

@@ -1,0 +1,54 @@
+<h1><code ng:non-bindable="">Family</code>
+<div><span class="hint"></span>
+</div>
+</h1>
+<div><h2 id="description">Description</h2>
+<div class="description"><div class="family-page"><p>Family factory.
+A Family is array of game entities matching a list of required components.</p>
+<pre><code>var family = new Family([&#39;position&#39;,&#39;movement&#39;]);</code></pre>
+</div></div>
+<div class="member method"><h2 id="methods">Methods</h2>
+<ul class="methods"><li><h3 id="methods_add">add(entity)</h3>
+<div class="add"><div class="family-add-page"><p>Adds an entity to this family</p>
+</div><h5 id="methods_add_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>entity</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="family-add-page"><p>the entity to add.</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_addifmatch">addIfMatch(entity)</h3>
+<div class="addifmatch"><div class="family-addifmatch-page"><p>Adds an entity to this family if entity matches requirements</p>
+</div><h5 id="methods_addifmatch_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>entity</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="family-addifmatch-page"><p>the entity to add if it matches the family requirements</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_ismatch">isMatch(entity)</h3>
+<div class="ismatch"><div class="family-ismatch-page"><p>Tests if the entity matches the family requirements</p>
+</div><h5 id="methods_ismatch_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>entity</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="family-ismatch-page"><p>the entity to test match.</p>
+</div></td></tr></tbody></table><h5 id="methods_ismatch_returns">Returns</h5><table class="variables-matrix"><tr><td><a href="" class="label type-hint type-hint-boolean">boolean</a></td><td><div class="family-ismatch-page"><p>True if the entity matches this family</p>
+</div></td></tr></table></div>
+</li>
+<li><h3 id="methods_remove">remove(entity)</h3>
+<div class="remove"><div class="family-remove-page"><p>Removes an entity from this family</p>
+</div><h5 id="methods_remove_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>entity</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="family-remove-page"><p>the entity to remove</p>
+</div></td></tr></tbody></table></div>
+</li>
+<li><h3 id="methods_removeifmatch">removeIfMatch(entity)</h3>
+<div class="removeifmatch"><div class="family-removeifmatch-page"><p>Removes an entity from this family if entity matches requirements</p>
+</div><h5 id="methods_removeifmatch_parameters">Parameters</h5><table class="variables-matrix table table-bordered table-striped"><thead><tr><th>Param</th><th>Type</th><th>Details</th></tr></thead><tbody><tr><td>entity</td><td><a href="" class="label type-hint type-hint-object">object</a></td><td><div class="family-removeifmatch-page"><p>the entity to remove if it matches the family requirements</p>
+</div></td></tr></tbody></table></div>
+</li>
+</ul>
+</div>
+<div class="member property"><h2 id="properties">Properties</h2>
+<ul class="properties"><li><h3 id="properties_entityadded">entityAdded</h3>
+<div class="entityadded"><div class="family-entityadded-page"><p>A signal dispatched when an entity is added</p>
+</div></div>
+</li>
+<li><h3 id="properties_entityremoved">entityRemoved</h3>
+<div class="entityremoved"><div class="family-entityremoved-page"><p>A signal dispatched when an entity is removed</p>
+</div></div>
+</li>
+<li><h3 id="properties_require">require</h3>
+<div class="require"><div class="family-require-page"><p>An array of component requirements of this family</p>
+</div></div>
+</li>
+</ul>
+</div>
+</div>
