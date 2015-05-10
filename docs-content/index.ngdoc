@@ -140,7 +140,7 @@ This method is great for when the entities state is pulled from browser offline 
 
 ```js
 var ball = ngEcs.$e();
-ball.$add('position', new Vector());  // equivalent to hero.$add('position');
+ball.$add('position', new Vector());  // equivalent to ball.$add('position');
 ball.$add('velocity', new Vector());
 ```
 
