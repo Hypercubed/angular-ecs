@@ -80,6 +80,8 @@
       return fam;
     };
 
+    var isDefined = angular.isDefined;
+
     /**
     * @ngdoc service
     * @name hc.ngEcs.ngEcs#$s
@@ -116,9 +118,9 @@
         };
       }
 
-      if (angular.isDefined(system.interval) && angular.isDefined(system.$update)) {
+      if (isDefined(system.interval) && isDefined(system.$update)) {
         var __update = system.$update.bind(system);
-        system.acc = system.isDefined(system.acc) ? system.acc : 0;
+        system.acc = isDefined(system.acc) ? system.acc : 0;
         system.$update = function(dt) {
           this.acc += dt;
           if (this.acc > this.interval) {
@@ -128,15 +130,15 @@
         };
       }
 
-      if (angular.isDefined(system.$started)) {
+      if (isDefined(system.$started)) {
         this.started.add(system.$started, system);
       }
 
-      if (angular.isDefined(system.$stopped)) {
+      if (isDefined(system.$stopped)) {
         this.stopped.add(system.$stopped, system);
       }
 
-      if (angular.isDefined(system.$added)) {
+      if (isDefined(system.$added)) {
         system.$added();
       }
 
