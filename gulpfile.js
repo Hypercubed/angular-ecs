@@ -33,6 +33,7 @@ var banner = ['/**',
 	''].join('\n');
 
 var sourceFiles = ['src/'+pkg.name+'.js', 'src/**/*.js'];
+var docFiles = ['docs-content/*.ngdoc', 'src/'+pkg.name+'.js', 'src/**/*.js'];
 var distFile = './dist/'+pkg.name+'.js';
 var minFile = './dist/'+pkg.name+'.min.js';
 
@@ -45,7 +46,7 @@ gulp.task('connect', ['ngdocs'], function () {
 });
 
 gulp.task('watch', function () {
-	gulp.watch(sourceFiles, ['ngdocs']);
+	gulp.watch(docFiles, ['ngdocs']);
 });
 
 gulp.task('clean', function() {
@@ -171,7 +172,7 @@ gulp.task('release', ['build'], function (callback) {
 	});
 
 gulp.task('ngdocs', [], function () {
-	return gulp.src(sourceFiles)
+	return gulp.src(docFiles)
 		.pipe(gulpDocs.process({
 			html5Mode: false
 		}))

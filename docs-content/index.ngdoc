@@ -1,0 +1,169 @@
+@ngdoc overview
+@name index
+@description
+
+# Why?
+
+There are many great game engines available for JavaScript. Many include all the pieces needed to develop games in JavaScript; a canvas based rendering engine, optimized and specialized game loop, pixel asset management, dependency injection, and so on. However, when developing a web game using AngularJS you may want to use only some parts of the game engine and leave other parts to Angular. To do this it often means playing tricks on the game engine to cooperate with AngularJS. Angular-ecs is a entity-component-system built for and with AngularJS. Angular-ecs was built to play nice with the angular architecture and to feel, as much as possible, like a native part of the angular framework.
+
+# What?
+
+Many ECS engines use linked lists internally to store game objects (entities, systems, etc).  They do this to optimize insertion and deletion.  These data structures don't play well with angular, especially angular directives.  The result of using another ECS engine is the need to constantly push ECS engine objects to JS Arrays for viewing in Angular.  I argue that if you are using angular for your view layer this costs outweighs the advantage during insert and delete (this is conjecture on my part, I could be wrong).  A second advantage is the ease of serialization.  ngEcs objects are easy to serialize to and from localstorage, a database, or rest api.
+
+# How?
+
+The Entity-component-system (ECS) pattern is an architectural pattern often used in game development. The ECS pattern follows the Composition over inheritance principle allowing greater flexibility in defining game entities. In ECS every game Entity consists of one or more components which add additional behavior or functionality. Therefore the behavior of an entity can be changed adding or removing components.
+
+# Quick Start
+
+## Terminology
+
+Entity: An entity is a general purpose object. In ngEcs an entity is a JavaScript object that contains a unique id and properties corresponding to components.
+
+Component: A component is the raw data and behavior for for one aspect of the game object.  In ngEcs an entity is a JavaScript object.
+
+System: A system is a set of functions an d properties that performs global actions on game entities.
+
+## Define a Component
+
+Components in ngEcs are defined by standard JavaScript Object constructor functions. You define a component using a "protyype" object or with a JS object constructor function.
+
+The simplest way to define a component constructor is to provide a "prototype" object:
+
+```js
+ngEcs.$c('position', {x: 0, y: 0});
+```
+
+However, to define component behaviors use a JS object constructor function:
+
+```js
+function Vector() {
+  this.x = 0;
+  this.y = 0;
+}
+
+Vector.prototype.init = function(x,y) {
+  this.x = x;
+  this.y = y;
+};
+
+Vector.prototype.scale = function(s) {
+  this.x *= s;
+  this.y *= s;
+  return this;
+};
+
+ngEcs.$c('position', Vector);
+ngEcs.$c('velocity', Vector);
+```
+
+Notice that the same constructor can be used to defined multiple components.
+
+
+## Define a System
+
+A system is responsible for updating entities.
+
+```js
+ngEcs.$s('physics', {
+  $require: ['position', 'velocity'],
+  $update: function (dt) {
+    // called once per update cycle
+  },
+  $updateEach: function (entity, dt) {
+    // called once per entity per update cycle
+    position = entity.position;
+    velocity = entity.velocity;
+    position.x += velocity.x * dt;
+    position.y += velocity.y * dt;
+  },
+  $render: function () {
+    // called once after the update cycle
+  }
+});
+```
+
+Adding a system with a $require will automatically create an associated family:
+
+```js
+assert($families['position::velocity'].length === 1);
+```
+
+You can also listen for entities to be added to the family:
+
+```js
+ngEcs.$s('physics', {
+  $require: ['position', 'velocity'],
+  $update: function (entity, dt) {
+    // same as above
+  },
+  $updateEach: function (entity, dt) {
+    // same as above
+  },
+  $render: function () {
+    // same as above
+  },
+  $entityAdded(entity) {
+    // This function is called whenever an entity with both 'position' and
+    // 'velocity' components is added to the world or when a component
+    // is added that causes the contain both 'position' and
+    // 'velocity' components
+  },
+  $entityAddedRemoved(entity) {
+    // This function is called whenever an entity with both 'position' and
+    // 'velocity' components is removed from the world. It can also be called
+    // when a 'position' or 'velocity' component is removed from an entity
+  });
+});
+```
+
+## Add Entities
+
+An entity is essentially a container of one or more components.  Any property of the entity that does not begin with an underscore or dollar sign is considered a components.  There are several ways to create an entity.  The simplest method is to provide an array of components names:
+
+```js
+ngEcs.$e(['position','velocity']);
+```
+
+Each value in the array that meets the component naming rules be use to create a new component object using the registered component constructors.
+
+Another way is to provide a entity template:
+
+```js
+ngEcs.$e({
+  position: {x:0, y:0},
+  velocity: {x:0, y:0}
+});
+```
+
+This method is great for when the entities state is pulled from browser offline storage or a database.  Each property in the template that meets the component naming rules will be use to create a new component object using the registered component constructors.  You can also add one at a time using ether a template or the actual constructor.
+
+```js
+var ball = ngEcs.$e();
+ball.$add('position', new Vector());  // equivalent to hero.$add('position');
+ball.$add('velocity', new Vector());
+```
+
+## ngEcs
+
+The engine (`ngEcs`) is the container of all the entities and systems.  Calling the `update` method will sequentially update all the systems, in the order they were added.
+
+```js
+ngEcs.$update(/* interval */);
+```
+
+You may also do the same for the `$render` functions:
+
+```js
+ngEcs.$render();
+```
+
+Or start and stop the engine:
+
+```js
+ngEcs.$start();
+
+////
+
+ngEcs.$stop();
+```

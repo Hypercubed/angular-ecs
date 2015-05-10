@@ -1,6 +1,6 @@
 /**
  * angular-ecs - An ECS framework built for AngularJS
- * @version v0.0.12
+ * @version v0.0.13
  * @link https://github.com/Hypercubed/angular-ecs
  * @author Jayson Harshbarger <>
  * @license 
@@ -13,10 +13,10 @@
   'use strict';
 
   /**
-  * @ngdoc overview
-  * @name index
+  * ngdoc overview
+  * name index
   *
-  * @description
+  * description
   * # An entity-component-system game framework made specifically for AngularJS.
   *
   * ## Why?
@@ -260,31 +260,34 @@
         return; // no emit
       }
 
-      // is it a registered component?
-      if ($components.hasOwnProperty(key)) {
-        var Component = $components[key];
-        if (typeof Component === 'function') {
-          // constructor
-          if (instance instanceof Component) {
-            // already an instance
-            this[key] = instance;
-          } else {
-            this[key] = new Component(this);
-            angular.extend(this[key], instance);
-          }
-        } else {
-          this[key] = angular.copy(Component);
-          angular.extend(this[key], instance);
-        }
-        //this[key].$parent = this;
-      } else {
-        this[key] = instance;
-      }
+      this[key] = createComponent(this, key, instance);
 
       this.$componentAdded.dispatch(this, key);
-      //this.$world.$onComponentAdd(this,key);
       return this;
     };
+
+    function createComponent(e, key, instance) {
+
+      if (!$components.hasOwnProperty(key)) {
+        // not a registered component
+        return instance;
+      }
+
+      var Component = $components[key];
+
+      if (typeof Component === 'function') {
+        // constructor
+        if (instance instanceof Component) {
+          // already an instance
+          return instance;
+        } else {
+          return angular.extend(new Component(e), instance);
+        }
+      } else {
+        // prototype
+        return angular.copy(instance, Object.create(Component));
+      }
+    }
 
     function isComponent(key) {
       return key.charAt(0) !== '$' && key.charAt(0) !== '_';
@@ -475,6 +478,9 @@
     if (!require) {
       return '::';
     }
+    if (typeof require === 'string') {
+      return require;
+    }
     return require.sort().join('::');
   };
 
@@ -557,7 +563,17 @@
       $components[key] = constructor;
     };
 
-    function getFamily(require) {
+    /**
+    * @ngdoc service
+    * @name hc.ngEcs.ngEcs#$f
+    * @methodOf hc.ngEcs.ngEcs
+    *
+    * @description Gets a family
+    *
+    * @param {string} require Array of component keys
+    */
+    Ecs.prototype.$f = function (require) {
+      // perhaps add to $components
       var id = Family.makeId(require);
       var fam = $families[id];
       if (fam) {
@@ -566,7 +582,7 @@
       fam = $families[id] = new Family(require);
 
       return fam;
-    }
+    };
 
     /**
     * @ngdoc service
@@ -584,7 +600,7 @@
 
       this.$systemsQueue.unshift(system); // todo: sort by priority, make scenes list
 
-      system.$family = getFamily(system.$require); // todo: later only store id?
+      system.$family = this.$f(system.$require); // todo: later only store id?
 
       if (system.$addEntity) {
         system.$family.entityAdded.add(system.$addEntity, system);

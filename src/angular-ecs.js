@@ -4,10 +4,10 @@
   'use strict';
 
   /**
-  * @ngdoc overview
-  * @name index
+  * ngdoc overview
+  * name index
   *
-  * @description
+  * description
   * # An entity-component-system game framework made specifically for AngularJS.
   *
   * ## Why?

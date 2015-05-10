@@ -151,6 +151,7 @@
 
   Family.makeId = function(require) {
     if (!require) { return '::'; }
+    if (typeof require === 'string') { return require; }
     return require.sort().join('::');
   };
 

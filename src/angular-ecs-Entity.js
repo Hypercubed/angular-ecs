@@ -133,29 +133,31 @@
         return;  // no emit
       }
 
-      // is it a registered component?
-      if ($components.hasOwnProperty(key)) {
-        var Component = $components[key];
-        if (typeof Component === 'function') {  // constructor
-          if (instance instanceof Component) {  // already an instance
-            this[key] = instance;
-          } else {
-            this[key] = new Component(this);
-            angular.extend(this[key], instance);
-          }
-        } else {
-          this[key] = angular.copy(Component);
-          angular.extend(this[key], instance);
-        }
-        //this[key].$parent = this;
-      } else {
-        this[key] = instance;
-      }
+      this[key] = createComponent(this, key, instance);
 
       this.$componentAdded.dispatch(this, key);
-      //this.$world.$onComponentAdd(this,key);
       return this;
     };
+
+    function createComponent(e, key, instance) {
+
+      if (!$components.hasOwnProperty(key)) {  // not a registered component
+        return instance;
+      }
+
+      var Component = $components[key];
+
+      if (typeof Component === 'function') {  // constructor
+        if (instance instanceof Component) {  // already an instance
+          return instance;
+        } else {
+          return angular.extend(new Component(e), instance);
+        }
+      } else {                                // prototype
+        return angular.copy(instance, Object.create(Component));
+      }
+
+    }
 
     function isComponent(key) {
       return key.charAt(0) !== '$' && key.charAt(0) !== '_';

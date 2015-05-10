@@ -39,7 +39,7 @@
       this.$fps = 60;
       this.$interval = 1;
       this.$systemsQueue = [];  // make $scenes?  Signal?
-      
+
       this.started = new signals.Signal();
       this.stopped = new signals.Signal();
 
@@ -62,14 +62,23 @@
       $components[key] = constructor;
     };
 
-    function getFamily(require) {
+    /**
+    * @ngdoc service
+    * @name hc.ngEcs.ngEcs#$f
+    * @methodOf hc.ngEcs.ngEcs
+    *
+    * @description Gets a family
+    *
+    * @param {string} require Array of component keys
+    */
+    Ecs.prototype.$f = function(require) {  // perhaps add to $components
       var id = Family.makeId(require);
       var fam = $families[id];
       if (fam) { return fam; }
       fam = $families[id] = new Family(require);
 
       return fam;
-    }
+    };
 
     /**
     * @ngdoc service
@@ -86,7 +95,7 @@
 
       this.$systemsQueue.unshift(system);  // todo: sort by priority, make scenes list
 
-      system.$family = getFamily(system.$require);  // todo: later only store id?
+      system.$family = this.$f(system.$require);  // todo: later only store id?
 
       if (system.$addEntity) {
         system.$family.entityAdded.add(system.$addEntity, system);
@@ -118,15 +127,15 @@
           }
         };
       }
-      
+
       if (angular.isDefined(system.$started)) {
         this.started.add(system.$started, system);
       }
-      
+
       if (angular.isDefined(system.$stopped)) {
         this.stopped.add(system.$stopped, system);
       }
-      
+
       if (angular.isDefined(system.$added)) {
         system.$added();
       }

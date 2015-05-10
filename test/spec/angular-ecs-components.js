@@ -19,13 +19,20 @@ describe('components', function () {
     expect($components).toBe(ngEcs.components);
   });
 
-  it('should use object as base', function () {
-    ngEcs.$c('testComponent', { testing: 123 });
+  it('should create components using prototype', function () {
+    ngEcs.$c('testComponent', {
+      testing: 123,
+      fn: jasmine.createSpy('callback')
+    });
     var e = ngEcs.$e(['testComponent']);
+
+    e.testComponent.fn();
+    expect(e.testComponent.fn.calls.length).toBe(1);
+    expect(typeof e.testComponent.fn).toBe('function');
     expect(e.testComponent.testing).toBe(123);
   });
 
-  it('should use function as constructor', function () {
+  it('should create components using constructor', function () {
     var MockComponent = jasmine.createSpy('callback');
 
     ngEcs.$c('testComponent', MockComponent);
@@ -36,7 +43,7 @@ describe('components', function () {
     expect(e.testComponent.prototype === MockComponent.prototype);
   });
 
-  it('should use function as constructor, unless already an instance', function () {
+  it('should not call constructor if already an instance', function () {
     var MockComponent = jasmine.createSpy('callback');
 
     ngEcs.$c('testComponent', MockComponent);
