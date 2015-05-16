@@ -111,9 +111,11 @@
         var _update = (system.$update) ? system.$update.bind(system) : function() {};
         system.$update = function(dt) {
           _update(dt);
-          var i = -1,arr = this.$family,len = arr.length;
-          while (++i < len) {
-            system.$updateEach(arr[i],dt);
+          var arr = this.$family,i = arr.length, item;
+          while (i--) {
+            if (i in arr) {
+              system.$updateEach(arr[i],dt);
+            }
           }
         };
       }
