@@ -183,12 +183,11 @@ describe('systems', function () {
     expect($systems.system4.$removeEntity.calls.length).toBe(1);
   });
 
-  it('should be able to remove components within system update', function () {
+  it('should be able to remove components within system updateEach', function () {
 
     ngEcs.$s('systemX', {
       $require: ['component2','component1'],
       $updateEach: function(e,dt) {
-        console.log(e._id);
 
         if (e._id === '2') {
           e.$remove('component2');
@@ -213,6 +212,40 @@ describe('systems', function () {
 
     expect(Object.keys($entities).length).toBe(4);
     expect($systems.systemX.$family.length).toBe(3);
+  });
+
+  it('should be able to add components within system updateEach', function () {
+
+    ngEcs.$s('systemX', {
+      $require: ['component1'],
+      $updateEach: function(e,dt) {
+
+        if (e._id === '2') {
+          e.$add('component2');
+        }
+
+      }
+    });
+
+    spyOn($systems.systemX, '$updateEach').andCallThrough();
+
+    ngEcs.$e('1', ['component1','component2']);
+    ngEcs.$e('2', ['component1']);
+    ngEcs.$e('3', ['component1']);
+    ngEcs.$e('4', ['component1','component2']);
+
+    expect(Object.keys($entities).length).toBe(4);
+    expect($systems.systemX.$family.length).toBe(4);
+    expect($systems.system4.$family.length).toBe(2);
+
+    $systems.systemX.$update(1);
+
+    expect($systems.systemX.$updateEach.calls.length).toBe(4);
+
+    expect(Object.keys($entities).length).toBe(4);
+    expect($systems.systemX.$family.length).toBe(4);
+    expect($systems.system4.$family.length).toBe(3);
+
   });
 
   it('should call removeEntity once', function () {
