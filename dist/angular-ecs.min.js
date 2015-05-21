@@ -1,6 +1,6 @@
 /**
  * angular-ecs - An ECS framework built for AngularJS
- * @version v0.0.13
+ * @version v0.0.14
  * @link https://github.com/Hypercubed/angular-ecs
  * @author Jayson Harshbarger <>
  * @license 
