@@ -1,5 +1,7 @@
 # angular-ecs
 
+[![Join the chat at https://gitter.im/Hypercubed/angular-ecs](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Hypercubed/angular-ecs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 An entity-component-system game framework made specifically for AngularJS.
 
 > "Make Games, Not Engines" - Everyone
