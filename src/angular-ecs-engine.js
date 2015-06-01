@@ -36,6 +36,7 @@
       //this.$timer = null;
       this.$playing = false;
       //this.$delay = 1000;
+      this.$requestId = null;
       this.$fps = 60;
       this.$interval = 1;
       this.$systemsQueue = [];  // make $scenes?  Signal?
@@ -266,6 +267,35 @@
       }
     };
 
+    Ecs.prototype.$runLoop = function() {
+
+      var self = this,
+        now,
+        last = window.performance.now(),
+        dt = 0,
+        DT = 0,
+        step;
+
+      function frame() {
+        if (!self.$playing || self.$paused) { return; }
+        now = window.performance.now();
+        DT = Math.min(1, (now - last) / 1000);
+        dt = dt + DT;
+        step = 1/self.$fps;
+        while(dt > step) {
+          dt = dt - step;
+          self.$update(step);
+        }
+        $rootScope.$applyAsync(function() {
+          self.$render(DT);
+        });
+        last = now;
+        self.$requestId = window.requestAnimationFrame(frame);
+      }
+
+      self.$requestId = window.requestAnimationFrame(frame);
+    };
+
     /**
     * @ngdoc service
     * @name hc.ngEcs.ngEcs#$start
@@ -277,34 +307,8 @@
       if (this.$playing) { return; }
       this.$playing = true;
 
-      var self = this,
-        now,
-        last = window.performance.now(),
-        dt = 0,
-        DT = 0,
-        step;
-
-      function frame() {
-        if (!self.$playing) { return; }
-        now = window.performance.now();
-        DT = Math.min(1, (now - last) / 1000);
-        dt = dt + DT;
-        step = 1/self.$fps;
-        while(dt > step) {
-          dt = dt - step;
-          self.$update(step);
-        }
-        //self.$render(DT);
-        //$rootScope.$apply();
-        $rootScope.$applyAsync(function() {
-          self.$render(DT);
-        });
-        last = now;
-        window.requestAnimationFrame(frame);
-      }
-
-      self.started.dispatch();
-      window.requestAnimationFrame(frame);
+      this.started.dispatch();
+      this.$runLoop();
     };
 
     /**
@@ -316,7 +320,19 @@
     */
     Ecs.prototype.$stop = function() {
       this.$playing = false;
+      window.cancelAnimationFrame(this.$requestId);
       this.stopped.dispatch();
+    };
+
+    Ecs.prototype.$pause = function() {
+      if (!this.$playing) { return; }
+      this.$paused = true;
+    };
+
+    Ecs.prototype.$unpause = function() {
+      if (!this.$playing || !this.$paused) { return; }
+      this.$paused = false;
+      this.$runLoop();
     };
 
     return new Ecs();

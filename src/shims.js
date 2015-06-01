@@ -30,6 +30,17 @@
       });
   })();
 
+  window.cancelAnimationFrame = (function () {
+    return (
+      window.cancelAnimationFrame ||
+      window.webkitCancelAnimationFrame ||
+      window.msCancelAnimationFrame ||
+      window.mozCancelAnimationFrame ||
+      function(id) {
+        clearTimeout(id);
+      });
+  })();
+
   if (!Function.prototype.bind) {
     Function.prototype.bind = function(oThis) {
       if (typeof this !== 'function') {
