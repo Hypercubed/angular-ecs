@@ -9,8 +9,8 @@ NG_DOCS={
       "shortName": "index",
       "type": "overview",
       "moduleName": "index",
-      "shortDescription": "An entity-component-system game framework made specifically for AngularJS.",
-      "keywords": "angular angular-ecs angularjs api architecture asset based built canvas cooperate dependency develop developing engine engines entity-component-system feel framework game games great include injection javascript leave loop management native needed nice optimized overview parts pieces pixel play playing rendering specialized tricks web"
+      "shortDescription": "Why?",
+      "keywords": "$add $c $e $entityadded $entityaddedremoved $render $require $s $start $stop $update $updateeach actions actual add adding additional advantage allowing angular angular-ecs angularjs api architectural architecture argue array arrays aspect assert asset associated automatically ball based behavior behaviors browser built called calling canvas changed component components composition conjecture considered consists constantly constructors container cooperate corresponding costs create cycle data database define defined defining delete deletion dependency develop developing development directives dollar don dt ease easy ecs engine engines entities entity entity-component-system equivalent essentially ether family feel flexibility framework function functionality functions game games general global great greater include inheritance init injection insert insertion internally interval javascript js layer leave length linked listen lists localstorage loop management meets method multiple names naming native needed ngecs nice notice object objects offline optimize optimized order outweighs overview parts pattern performs physics pieces pixel play playing position principle properties property prototype protyype provide pulled purpose push quick raw registered removed removing rendering responsible rest result return rules scale second sequentially serialization serialize set sign simplest specialized standard start storage store structures system systems template terminology time tricks underscore unique update updating var vector velocity view viewing ways web world wrong"
     },
     {
       "section": "api",
@@ -109,7 +109,7 @@ NG_DOCS={
       "type": "service",
       "moduleName": "hc.ngEcs",
       "shortDescription": "ECS engine. Contain System, Components, and Entities.",
-      "keywords": "$c $components $e $entities $families $s $start $stop $systems $update adds api array calls collision component components config configuration control contructor creates cycle ecs engine entities entity family game hc instance key loop ngecs object player position prototype service starts stops system update"
+      "keywords": "$c $components $e $entities $f $families $s $start $stop $systems $update adds api array calls collision component components config configuration control contructor creates cycle ecs engine entities entity family game hc instance key loop ngecs object player position prototype require service starts stops system update"
     }
   ],
   "apis": {

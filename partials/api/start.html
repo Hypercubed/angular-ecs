@@ -92,7 +92,7 @@ ngEcs.$c(&#39;velocity&#39;, Vector);</code></pre>
 });</code></pre>
 <p>This method is great for when the entities state is pulled from browser offline storage or a database.  Each property in the template that meets the component naming rules will be use to create a new component object using the registered component constructors.  You can also add one at a time using ether a template or the actual constructor.</p>
 <pre><code class="lang-js">var ball = ngEcs.$e();
-ball.$add(&#39;position&#39;, new Vector());  // equivalent to ball.$add(&#39;position&#39;);
+ball.$add(&#39;position&#39;, new Vector());  // equivalent to hero.$add(&#39;position&#39;);
 ball.$add(&#39;velocity&#39;, new Vector());</code></pre>
 <h3 id="quick-start_ngecs">ngEcs</h3>
 <p>The engine (<code>ngEcs</code>) is the container of all the entities and systems.  Calling the <code>update</code> method will sequentially update all the systems, in the order they were added.</p>
