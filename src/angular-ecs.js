@@ -1,3 +1,5 @@
+/* global angular:true */
+
 // main
 (function() {
 

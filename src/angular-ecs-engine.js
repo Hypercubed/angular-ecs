@@ -1,3 +1,5 @@
+/* global signals */
+
 // engine
 (function() {
 
@@ -202,7 +204,7 @@
     * @return {Entity} The Entity
     */
     Ecs.prototype.$e = function(id, instance) {
-      var self = this;
+      //var self = this;
 
       if (typeof id === 'object') {
         instance = id;

@@ -166,5 +166,4 @@
     * */
     .constant('Family', Family);
 
-
 })();
