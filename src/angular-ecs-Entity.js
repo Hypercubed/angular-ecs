@@ -147,16 +147,47 @@
 
       var Component = $components[key];
 
-      if (typeof Component === 'function') {  // constructor
+      if (angular.isFunction(Component)) {  // constructor
         if (instance instanceof Component) {  // already an instance
           return instance;
         } else {
-          return angular.extend(new Component(e), instance);
+          if (angular.isDefined(Component.$inject)) {
+            return instantiate(Component, instance, e);
+          } else {
+            return angular.extend(new Component(e), instance);
+          }
         }
       } else {                                // prototype
         return angular.copy(instance, Object.create(Component));
       }
 
+    }
+
+    function instantiate(Type, locals, e) {
+      var $inject = Type.$inject;
+
+      var args = [], i, length, key, arg;
+
+      for (i = 0, length = $inject.length; i < length; i++) {
+        key = $inject[i];  // todo: throw error if invalid
+
+        arg = locals.hasOwnProperty(key)
+          ? locals[key]
+          : getService(key, e);
+
+        args.push(arg);
+      }
+
+      var instance = Object.create(Type.prototype || null);
+      Type.apply(instance, args);
+      return instance;
+
+    }
+
+    function getService(key, caller) {
+      if (key === '$parent') { return caller; }
+      //if (key === '$world') { return ngEcs; }  // todo
+      return undefined;
     }
 
     function isComponent(key) {

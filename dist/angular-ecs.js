@@ -1,6 +1,6 @@
 /**
  * angular-ecs - An ECS framework built for AngularJS
- * @version v0.0.15
+ * @version v0.0.16
  * @link https://github.com/Hypercubed/angular-ecs
  * @author Jayson Harshbarger <>
  * @license 
@@ -275,18 +275,52 @@
 
       var Component = $components[key];
 
-      if (typeof Component === 'function') {
+      if (angular.isFunction(Component)) {
         // constructor
         if (instance instanceof Component) {
           // already an instance
           return instance;
         } else {
-          return angular.extend(new Component(e), instance);
+          if (angular.isDefined(Component.$inject)) {
+            return instantiate(Component, instance, e);
+          } else {
+            return angular.extend(new Component(e), instance);
+          }
         }
       } else {
         // prototype
         return angular.copy(instance, Object.create(Component));
       }
+    }
+
+    function instantiate(Type, locals, e) {
+      var $inject = Type.$inject;
+
+      var args = [],
+          i,
+          length,
+          key,
+          arg;
+
+      for (i = 0, length = $inject.length; i < length; i++) {
+        key = $inject[i]; // todo: throw error if invalid
+
+        arg = locals.hasOwnProperty(key) ? locals[key] : getService(key, e);
+
+        args.push(arg);
+      }
+
+      var instance = Object.create(Type.prototype || null);
+      Type.apply(instance, args);
+      return instance;
+    }
+
+    function getService(key, caller) {
+      if (key === '$parent') {
+        return caller;
+      }
+      //if (key === '$world') { return ngEcs; }  // todo
+      return undefined;
     }
 
     function isComponent(key) {
@@ -543,6 +577,7 @@
 
       this.started = new signals.Signal();
       this.stopped = new signals.Signal();
+      this.rendered = new signals.Signal();
 
       angular.extend(this, opts);
     }
@@ -639,6 +674,20 @@
         };
       }
 
+      if (system.$renderEach) {
+        var _render = system.$render ? system.$render.bind(system) : function () {};
+        system.$render = function () {
+          _render();
+          var arr = this.$family,
+              i = arr.length;
+          while (i--) {
+            if (i in arr) {
+              system.$renderEach(arr[i]);
+            }
+          }
+        };
+      }
+
       if (isDefined(system.$started)) {
         this.started.add(system.$started, system);
       }
@@ -687,7 +736,7 @@
       }
 
       var e = new Entity(id);
-      e.$world = this;
+      e.$world = this; // get rid of this
 
       if (Array.isArray(instance)) {
         instance.forEach(function (key) {
@@ -800,9 +849,9 @@
           dt = dt - step;
           self.$update(step);
         }
-        $rootScope.$applyAsync(function () {
-          self.$render(DT);
-        });
+        self.$render(DT);
+        $rootScope.$applyAsync(function () {});
+
         last = now;
         self.$requestId = window.requestAnimationFrame(frame);
       }

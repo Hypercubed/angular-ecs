@@ -16,17 +16,23 @@ describe('module', function () {
 
     ngEcs.$s('test', {
       $update: function() {},
-      $updateEach: jasmine.createSpy('$updateEach')
+      $updateEach: jasmine.createSpy('$updateEach'),
+      $render: function() {},
+      $renderEach: jasmine.createSpy('$renderEach')
     });
 
     ngEcs.$s('test2', {
       $require: ['test2'],
       $update: function() {},
-      $updateEach: jasmine.createSpy('$updateEach')
+      $updateEach: jasmine.createSpy('$updateEach'),
+      $render: function() {},
+      $renderEach: jasmine.createSpy('$renderEach')
     });
 
     spyOn($systems.test, '$update').andCallThrough();
     spyOn($systems.test2, '$update').andCallThrough();
+    spyOn($systems.test, '$render').andCallThrough();
+    spyOn($systems.test2, '$render').andCallThrough();
   }));
 
   it('should setup engine', function () {
@@ -78,6 +84,56 @@ describe('module', function () {
     expect($systems.test.$updateEach.calls.length).toBe(10);
     expect($systems.test2.$update.calls.length).toBe(2);
     expect($systems.test2.$updateEach.calls.length).toBe(6);
+  });
+
+  it('should call render and renderEach on each system', function () {
+
+    ngEcs.$e({ 'test' :{} });
+    ngEcs.$e({ 'test' :{} });
+    ngEcs.$e({ 'test2' :{} });
+    ngEcs.$e({ 'test2' :{} });
+    ngEcs.$e({ 'test2' :{} });
+
+    ngEcs.$render();
+    ngEcs.$render();
+
+    expect($systems.test.$render.calls.length).toBe(2);
+    expect($systems.test.$renderEach.calls.length).toBe(10);
+    expect($systems.test2.$render.calls.length).toBe(2);
+    expect($systems.test2.$renderEach.calls.length).toBe(6);
+  });
+
+  it('should run game loop', function (done) {
+
+    runs(function() {
+      ngEcs.$e({ 'test' :{} });
+      ngEcs.$e({ 'test' :{} });
+      ngEcs.$e({ 'test2' :{} });
+      ngEcs.$e({ 'test2' :{} });
+      ngEcs.$e({ 'test2' :{} });
+
+      ngEcs.$start();
+    });
+
+    waitsFor(function() {
+      if ($systems.test2.$render.calls.length === 4) {
+        ngEcs.$stop();
+
+        expect($systems.test.$update.calls.length).toBe(4);
+        expect($systems.test.$updateEach.calls.length).toBe(20);
+        expect($systems.test2.$update.calls.length).toBe(4);
+        expect($systems.test2.$updateEach.calls.length).toBe(12);
+
+        expect($systems.test.$render.calls.length).toBe(4);
+        expect($systems.test.$renderEach.calls.length).toBe(20);
+        expect($systems.test2.$render.calls.length).toBe(4);
+        expect($systems.test2.$renderEach.calls.length).toBe(12);
+
+        return true;
+      }
+      return false;
+    }, 'Test', 1000);
+
   });
 
 });

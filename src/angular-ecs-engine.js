@@ -43,6 +43,7 @@
 
       this.started = new signals.Signal();
       this.stopped = new signals.Signal();
+      this.rendered = new signals.Signal();
 
       angular.extend(this, opts);
     }
@@ -133,6 +134,19 @@
         };
       }
 
+      if (system.$renderEach) {
+        var _render = (system.$render) ? system.$render.bind(system) : function() {};
+        system.$render = function() {
+          _render();
+          var arr = this.$family,i = arr.length;
+          while (i--) {
+            if (i in arr) {
+              system.$renderEach(arr[i]);
+            }
+          }
+        };
+      }
+
       if (isDefined(system.$started)) {
         this.started.add(system.$started, system);
       }
@@ -182,7 +196,7 @@
       }
 
       var e = new Entity(id);
-      e.$world = this;
+      e.$world = this;  // get rid of this
 
       if (Array.isArray(instance)) {
         instance.forEach(function(key) {
@@ -286,9 +300,9 @@
           dt = dt - step;
           self.$update(step);
         }
-        $rootScope.$applyAsync(function() {
-          self.$render(DT);
-        });
+        self.$render(DT);
+        $rootScope.$applyAsync(function() {});
+
         last = now;
         self.$requestId = window.requestAnimationFrame(frame);
       }
