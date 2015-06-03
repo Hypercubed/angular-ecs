@@ -37,6 +37,7 @@ bower install --save Hypercubed/angular-ecs
 ## Examples
 
 * [Hypercubed/Epsilon-Prime](https://github.com/Hypercubed/Epsilon-Prime)
+* [Hypercubed/angular-ecs-flap](https://github.com/Hypercubed/angular-ecs-flap)
 * [Hypercubed/angular-ecs-pong](https://github.com/Hypercubed/angular-ecs-pong)
 
 ## Acknowledgements
