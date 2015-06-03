@@ -573,11 +573,17 @@
       this.$requestId = null;
       this.$fps = 60;
       this.$interval = 1;
-      this.$systemsQueue = []; // make $scenes?  Signal?
+      //this.$systemsQueue = [];  // make $scenes?  Signal?
 
       this.started = new signals.Signal();
       this.stopped = new signals.Signal();
+
+      this.updated = new signals.Signal();
       this.rendered = new signals.Signal();
+
+      this.rendered.add(function () {
+        $rootScope.$applyAsync();
+      }, null, 1000);
 
       angular.extend(this, opts);
     }
@@ -634,9 +640,9 @@
     */
     Ecs.prototype.$s = function (key, system) {
       // perhaps add to $systems
-      $systems[key] = system;
+      $systems[key] = system; // todo: make a system class?
 
-      this.$systemsQueue.unshift(system); // todo: sort by priority, make scenes list
+      //this.$systemsQueue.unshift(system);  // todo: still needed?
 
       system.$family = this.$f(system.$require); // todo: later only store id?
 
@@ -648,44 +654,57 @@
         system.$family.entityRemoved.add(system.$removeEntity, system);
       }
 
-      if (system.$updateEach) {
-        var _update = system.$update ? system.$update.bind(system) : function () {};
-        system.$update = function (dt) {
-          _update(dt);
+      if (isDefined(system.$update)) {
+
+        if (isDefined(system.interval)) {
+          // add tests for interval
+          system.acc = isDefined(system.acc) ? system.acc : 0;
+          system.$$update = function (dt) {
+            this.acc += dt;
+            if (this.acc > this.interval) {
+              system.$family.length > 0 && this.$update(time);
+              this.acc = this.acc - this.interval;
+            }
+          };
+        } else {
+          system.$$update = function (time) {
+            // can be system prototype
+            system.$family.length > 0 && this.$update(time);
+          };
+        }
+
+        this.updated.add(system.$$update, system);
+      }
+
+      if (isDefined(system.$updateEach)) {
+        system.$$updateEach = function (time) {
+          // can be system prototype
           var arr = this.$family,
               i = arr.length;
           while (i--) {
             if (i in arr) {
-              system.$updateEach(arr[i], dt);
+              this.$updateEach(arr[i], time);
             }
           }
         };
+        this.updated.add(system.$$updateEach, system);
       }
 
-      if (isDefined(system.interval) && isDefined(system.$update)) {
-        var __update = system.$update.bind(system);
-        system.acc = isDefined(system.acc) ? system.acc : 0;
-        system.$update = function (dt) {
-          this.acc += dt;
-          if (this.acc > this.interval) {
-            __update(dt);
-            this.acc = this.acc - this.interval;
-          }
-        };
+      if (isDefined(system.$render)) {
+        this.rendered.add(system.$render, system);
       }
 
-      if (system.$renderEach) {
-        var _render = system.$render ? system.$render.bind(system) : function () {};
-        system.$render = function () {
-          _render();
+      if (isDefined(system.$renderEach)) {
+        system.$$renderEach = function () {
           var arr = this.$family,
               i = arr.length;
           while (i--) {
             if (i in arr) {
-              system.$renderEach(arr[i]);
+              this.$renderEach(arr[i]);
             }
           }
         };
+        this.rendered.add(system.$$renderEach, system);
       }
 
       if (isDefined(system.$started)) {
@@ -803,29 +822,11 @@
     * @description Calls the update cycle
     */
     Ecs.prototype.$update = function (time) {
-      time = angular.isUndefined(time) ? this.$interval : time;
-      var arr = this.$systemsQueue,
-          i = arr.length,
-          system;
-      while (i--) {
-        system = arr[i];
-        if (system.$update && system.$family.length > 0) {
-          system.$update(time);
-        }
-      }
+      this.updated.dispatch(time || this.$interval);
     };
 
     Ecs.prototype.$render = function (time) {
-      time = angular.isUndefined(time) ? this.$interval : time;
-      var arr = this.$systemsQueue,
-          i = arr.length,
-          system;
-      while (i--) {
-        system = arr[i];
-        if (system.$render) {
-          system.$render(time);
-        }
-      }
+      this.rendered.dispatch(time || this.$interval);
     };
 
     Ecs.prototype.$runLoop = function () {
@@ -850,7 +851,6 @@
           self.$update(step);
         }
         self.$render(DT);
-        $rootScope.$applyAsync(function () {});
 
         last = now;
         self.$requestId = window.requestAnimationFrame(frame);

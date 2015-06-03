@@ -206,7 +206,7 @@ describe('systems', function () {
     expect(Object.keys($entities).length).toBe(4);
     expect($systems.systemX.$family.length).toBe(4);
 
-    $systems.systemX.$update(1);
+    ngEcs.$update(1);
 
     expect($systems.systemX.$updateEach.calls.length).toBe(4);
 
@@ -238,7 +238,7 @@ describe('systems', function () {
     expect($systems.systemX.$family.length).toBe(4);
     expect($systems.system4.$family.length).toBe(2);
 
-    $systems.systemX.$update(1);
+    ngEcs.$update(1);
 
     expect($systems.systemX.$updateEach.calls.length).toBe(4);
 
