@@ -10,7 +10,7 @@
 
 'use strict';
 
-describe('module', function () {
+describe('engine', function () {
 
   var ngEcs, $systems;
 
@@ -36,6 +36,8 @@ describe('module', function () {
       $render: jasmine.createSpy('$render'),
       $renderEach: jasmine.createSpy('$renderEach')
     });
+
+    //jasmine.Clock.useMock();
 
   }));
 
@@ -107,6 +109,32 @@ describe('module', function () {
     expect($systems.test2.$renderEach.calls.length).toBe(6);
   });
 
+  xit('should run game loop', function (done) {
+
+    ngEcs.$e({ 'test' :{} });
+    ngEcs.$e({ 'test' :{} });
+    ngEcs.$e({ 'test2' :{} });
+    ngEcs.$e({ 'test2' :{} });
+    ngEcs.$e({ 'test2' :{} });
+
+    ngEcs.$start();
+
+    jasmine.Clock.tick(1000/60*4);
+
+    //console.log(1/ngEcs.$fps, $systems.test.$render.mostRecentCall.args[0], 1/60);
+
+    /* expect($systems.test.$update.calls.length).toBe(4);
+    expect($systems.test.$updateEach.calls.length).toBe(20);
+    expect($systems.test2.$update.calls.length).toBe(4);
+    expect($systems.test2.$updateEach.calls.length).toBe(12); */
+
+    expect($systems.test.$render.calls.length).toBe(4);
+    expect($systems.test.$renderEach.calls.length).toBe(20);
+    expect($systems.test2.$render.calls.length).toBe(4);
+    expect($systems.test2.$renderEach.calls.length).toBe(12);
+
+  });
+
   it('should run game loop', function (done) {
 
     runs(function() {
@@ -120,23 +148,63 @@ describe('module', function () {
     });
 
     waitsFor(function() {
-      if ($systems.test2.$render.calls.length === 4) {
+      return ($systems.test2.$render.calls.length === 7);
+    }, 'Test', 1000);
+
+    runs(function() {
+      expect($systems.test.$update.mostRecentCall.args[0]).toBe(1/ngEcs.$fps);
+      expect($systems.test.$render.mostRecentCall.args[0]).toBeCloseTo(0.016);
+
+      expect($systems.test.$update.calls.length).toBe(6);
+      expect($systems.test.$updateEach.calls.length).toBe(30);
+      expect($systems.test2.$update.calls.length).toBe(6);
+      expect($systems.test2.$updateEach.calls.length).toBe(18);
+
+      expect($systems.test.$render.calls.length).toBe(7);
+      expect($systems.test.$renderEach.calls.length).toBe(5*7);
+      expect($systems.test2.$render.calls.length).toBe(7);
+      expect($systems.test2.$renderEach.calls.length).toBe(3*7);
+    });
+
+  });
+
+  it('should run game loop, interval', function (done) {
+    var sys;
+
+    runs(function() {
+
+      sys = ngEcs.$s('test3', {
+        interval: 0.03,
+        $update: jasmine.createSpy('$update'),
+        $updateEach: jasmine.createSpy('$updateEach'),
+        $render: jasmine.createSpy('$render'),
+        $renderEach: jasmine.createSpy('$renderEach')
+      });
+
+      ngEcs.$e({ 'test' :{} });
+      ngEcs.$e({ 'test' :{} });
+
+      ngEcs.$start();
+    });
+
+    waitsFor(function() {
+      if (sys.$render.calls.length === 5) {
         ngEcs.$stop();
-
-        //expect($systems.test.$update.calls.length).toBe(4);
-        //expect($systems.test.$updateEach.calls.length).toBe(20);
-        //expect($systems.test2.$update.calls.length).toBe(4);
-        //expect($systems.test2.$updateEach.calls.length).toBe(12);
-
-        expect($systems.test.$render.calls.length).toBe(4);
-        expect($systems.test.$renderEach.calls.length).toBe(20);
-        expect($systems.test2.$render.calls.length).toBe(4);
-        expect($systems.test2.$renderEach.calls.length).toBe(12);
-
         return true;
       }
       return false;
     }, 'Test', 1000);
+
+    runs(function() {
+      expect(sys.$update.mostRecentCall.args[0]).toBe(0.03);
+      expect(sys.$render.mostRecentCall.args[0]).toBeCloseTo(0.016);
+
+      expect(sys.$update.calls.length).toBe(2);
+      //expect(sys.$updateEach.calls.length).toBe(5*0.016/0.04*2);  This is a bug, updateEach does not respect interval
+
+      expect(sys.$render.calls.length).toBe(5);
+      expect(sys.$renderEach.calls.length).toBe(2*5);
+    });
 
   });
 

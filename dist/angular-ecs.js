@@ -1,6 +1,6 @@
 /**
  * angular-ecs - An ECS framework built for AngularJS
- * @version v0.0.17
+ * @version v0.0.18
  * @link https://github.com/Hypercubed/angular-ecs
  * @author Jayson Harshbarger <>
  * @license 
@@ -666,14 +666,18 @@
           system.$$update = function (dt) {
             this.acc += dt;
             if (this.acc > this.interval) {
-              system.$family.length > 0 && this.$update(time);
+              if (system.$family.length > 0) {
+                this.$update(this.interval);
+              }
               this.acc = this.acc - this.interval;
             }
           };
         } else {
-          system.$$update = function (time) {
+          system.$$update = function (dt) {
             // can be system prototype
-            system.$family.length > 0 && this.$update(time);
+            if (system.$family.length > 0) {
+              this.$update(dt);
+            }
           };
         }
 
@@ -682,7 +686,7 @@
 
       if (isDefined(system.$updateEach)) {
         system.$$updateEach = function (time) {
-          // can be system prototype
+          // can be system prototype, bug: updateEach doesn't respect interval
           var arr = this.$family,
               i = arr.length;
           while (i--) {
