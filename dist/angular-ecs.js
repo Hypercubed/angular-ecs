@@ -1,10 +1,12 @@
 /**
  * angular-ecs - An ECS framework built for AngularJS
- * @version v0.0.16
+ * @version v0.0.17
  * @link https://github.com/Hypercubed/angular-ecs
  * @author Jayson Harshbarger <>
  * @license 
  */
+/* global angular:true */
+
 // main
 'use strict';
 
@@ -530,6 +532,8 @@
   .constant('Family', Family);
 })();
 
+/* global signals */
+
 // engine
 (function () {
 
@@ -583,7 +587,7 @@
 
       this.rendered.add(function () {
         $rootScope.$applyAsync();
-      }, null, 1000);
+      }, null, -1);
 
       angular.extend(this, opts);
     }
@@ -747,7 +751,7 @@
     * @return {Entity} The Entity
     */
     Ecs.prototype.$e = function (id, instance) {
-      var self = this;
+      //var self = this;
 
       if (typeof id === 'object') {
         instance = id;

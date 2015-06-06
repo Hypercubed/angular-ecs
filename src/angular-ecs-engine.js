@@ -49,7 +49,7 @@
       this.updated = new signals.Signal();
       this.rendered = new signals.Signal();
 
-      this.rendered.add(function() { $rootScope.$applyAsync(); }, null, 1000);
+      this.rendered.add(function() { $rootScope.$applyAsync(); }, null, -1);
 
       angular.extend(this, opts);
     }
