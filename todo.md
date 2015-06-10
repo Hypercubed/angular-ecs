@@ -7,6 +7,7 @@ _\( managed using [todo-md](https://github.com/Hypercubed/todo-md) \)_
 - [ ] Finish component constructor function
   - [ ] ngEcs.$c('position', ['x', 'y', Victor]);
   - [ ] make $world injectable
+  - [ ] Normalize components constructors on register
 - [ ] Use babel? ES6 modules?  Inheritance for systems?
 - [ ] Add ecs.$destroy function?
 - [ ] ngECSProvider.config
@@ -14,6 +15,10 @@ _\( managed using [todo-md](https://github.com/Hypercubed/todo-md) \)_
 - [ ] Update Jasmine
 - [ ] get render and renderEach to respect interval
 - [ ] Use BoostArray?
+- [ ] Make a System class
+- [ ] Serialization helper
+- [ ] System priority
+- [ ] Scene manager
 - [x] Add $renderEach
 - [x] Use signals for update and render?
 - [x] Add tests for update, updateEach, render, renderEach
