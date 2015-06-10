@@ -12,7 +12,8 @@ _\( managed using [todo-md](https://github.com/Hypercubed/todo-md) \)_
 - [ ] ngECSProvider.config
 - [ ] Maybe git rid of ngEcs service in favor or $xxx Providers ($entities.add(xxx), $systems.add(xxx), ...)
 - [ ] Update Jasmine
+- [ ] get render and renderEach to respect interval
 - [ ] Use BoostArray?
 - [x] Add $renderEach
-- [ ] Use signals for update and render?
+- [x] Use signals for update and render?
 - [x] Add tests for update, updateEach, render, renderEach

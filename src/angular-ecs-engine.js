@@ -21,6 +21,12 @@
   * */
   .service('ngEcs', function($rootScope, $log, $timeout, $components, $systems, $entities, $families, Entity, Family) {
 
+    var _uuid = 0;
+    function uuid() {
+      var timestamp = new Date().getUTCMilliseconds();
+      return '' + _uuid++ + '_' + timestamp;
+    }
+    
     function Ecs(opts) {
       this.components = $components;
       this.systems = $systems;
@@ -84,6 +90,7 @@
       var fam = $families[id];
       if (fam) { return fam; }
       fam = $families[id] = new Family(require);
+      onFamilyAdded(fam);
 
       return fam;
     };
@@ -101,6 +108,12 @@
     * @param {object} instance system configuration
     */
     Ecs.prototype.$s = function(key, system) {  // perhaps add to $systems
+      
+      if (typeof key === 'object') {
+        system = key;
+        key = uuid();
+      }
+      
       $systems[key] = system;  // todo: make a system class?
 
       //this.$systemsQueue.unshift(system);  // todo: still needed?
@@ -253,6 +266,12 @@
       delete this.entities[e._id];
 
     };
+    
+    function onFamilyAdded(family) {
+      angular.forEach($entities, function(e) {
+        family.addIfMatch(e);
+      });
+    }
 
     function onComponentAdded(entity, key) {
       angular.forEach($families, function(family) {

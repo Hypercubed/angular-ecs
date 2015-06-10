@@ -55,6 +55,14 @@ describe('systems', function () {
     ngEcs.$s('test', {});
     expect($systems.test.$family).toBe($families['::']);
   });
+  
+  it('should auto generate system names', function () {
+    var s = ngEcs.$s({
+      test: 123
+    });
+    expect(s.$family).toBe($families['::']);
+    expect(s.test).toBe(123);
+  });
 
   it('should reference family', function () {
     expect($systems.system1.$family).toBe($families.component1);

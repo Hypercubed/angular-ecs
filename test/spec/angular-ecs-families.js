@@ -113,5 +113,31 @@ describe('families', function () {
     expect($systems.system1.$family).toBe($systems.system5.$family);
 
   });
+  
+  it('should create a families', function () {
+    
+    var f = ngEcs.$f(['component4']);
+
+    ngEcs.$e(['component4']);
+    ngEcs.$e(['component4','component5']);
+    ngEcs.$e(['component5']);
+    ngEcs.$e(['component5']);
+
+    expect(Object.keys($entities).length).toBe(4);
+    expect(f.length).toBe(2);
+  });
+  
+  it('should allow creating a families after entities', function () {
+
+    ngEcs.$e(['component4']);
+    ngEcs.$e(['component4','component5']);
+    ngEcs.$e(['component5']);
+    ngEcs.$e(['component5']);
+    
+    var f = ngEcs.$f(['component4']);
+
+    expect(Object.keys($entities).length).toBe(4);
+    expect(f.length).toBe(2);
+  });
 
 });
