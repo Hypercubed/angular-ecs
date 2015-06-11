@@ -1,6 +1,6 @@
 /**
  * angular-ecs - An ECS framework built for AngularJS
- * @version v0.0.19
+ * @version v0.0.20
  * @link https://github.com/Hypercubed/angular-ecs
  * @author Jayson Harshbarger <>
  * @license 
@@ -268,48 +268,43 @@
       return this;
     };
 
-    function createComponent(e, key, instance) {
+    function createComponent(e, name, state) {
 
-      if (!$components.hasOwnProperty(key)) {
-        // not a registered component
-        return instance;
+      // not a registered component
+      if (!$components.hasOwnProperty(name)) {
+        return state;
       }
 
-      var Component = $components[key];
+      var Type = $components[name];
 
-      if (angular.isFunction(Component)) {
-        // constructor
-        if (instance instanceof Component) {
-          // already an instance
-          return instance;
-        } else {
-          if (angular.isDefined(Component.$inject)) {
-            return instantiate(Component, instance, e);
-          } else {
-            return angular.extend(new Component(e), instance);
-          }
-        }
-      } else {
-        // prototype
-        return angular.copy(instance, Object.create(Component));
+      // not valid constructor
+      if (!angular.isFunction(Type)) {
+        throw new TypeError('Component constructor may only be an Object or function');
+        return;
       }
+
+      // already an instance
+      if (state instanceof Type) {
+        return state;
+      }
+
+      // inject
+      if (Type.$inject) {
+        return instantiate(Type, e, state);
+      }
+
+      return angular.extend(new Type(e), state);
     }
 
-    function instantiate(Type, locals, e) {
+    function instantiate(Type, e, state) {
       var $inject = Type.$inject;
 
-      var args = [],
-          i,
-          length,
-          key,
-          arg;
+      var length = $inject.length,
+          args = new Array(length),
+          i;
 
-      for (i = 0, length = $inject.length; i < length; i++) {
-        key = $inject[i]; // todo: throw error if invalid
-
-        arg = locals.hasOwnProperty(key) ? locals[key] : getService(key, e);
-
-        args.push(arg);
+      for (i = 0; i < length; ++i) {
+        args[i] = getValue(e, $inject[i], state);
       }
 
       var instance = Object.create(Type.prototype || null);
@@ -317,16 +312,19 @@
       return instance;
     }
 
-    function getService(key, caller) {
+    function getValue(e, key, state) {
       if (key === '$parent') {
-        return caller;
+        return e;
+      }
+      if (key === '$state') {
+        return state;
       }
       //if (key === '$world') { return ngEcs; }  // todo
-      return undefined;
+      return state[key];
     }
 
-    function isComponent(key) {
-      return key.charAt(0) !== '$' && key.charAt(0) !== '_';
+    function isComponent(name) {
+      return name.charAt(0) !== '$' && name.charAt(0) !== '_';
     }
 
     /**
@@ -555,6 +553,12 @@
   * */
   .service('ngEcs', ['$rootScope', '$log', '$timeout', '$components', '$systems', '$entities', '$families', 'Entity', 'Family', function ($rootScope, $log, $timeout, $components, $systems, $entities, $families, Entity, Family) {
 
+    var _uuid = 0;
+    function uuid() {
+      var timestamp = new Date().getUTCMilliseconds();
+      return '' + _uuid++ + '_' + timestamp;
+    }
+
     function Ecs(opts) {
       this.components = $components;
       this.systems = $systems;
@@ -602,12 +606,40 @@
     * @description Adds a component contructor
     *
     * @param {string} key component key
-    * @param {function|object} constructor component constructor or prototype
+    * @param {function|object|array} constructor Component constructor fn (optionally decorated with DI annotations in the array notation) or constructor prototype object
     */
     Ecs.prototype.$c = function (key, constructor) {
       // perhaps add to $components
-      $components[key] = constructor;
+      if (typeof key !== 'string') {
+        throw new TypeError('A components name is required');
+      }
+      return $components[key] = makeConstructor(key, constructor);
     };
+
+    function makeConstructor(name, O) {
+
+      if (angular.isArray(O)) {
+        var T = O.pop();
+        T.$inject = O;
+        O = T;
+      };
+
+      if (angular.isFunction(O)) {
+        return O;
+      }
+
+      if (typeof O !== 'object') {
+        throw new TypeError('Component constructor may only be an Object or function');
+      }
+
+      var Constructor = new Function('return function ' + name + '( instance ){ angular.extend(this, instance); }')();
+
+      Constructor.prototype = O;
+      Constructor.prototype.constructor = Constructor;
+      Constructor.$inject = ['$state'];
+
+      return Constructor;
+    }
 
     /**
     * @ngdoc service
@@ -626,6 +658,7 @@
         return fam;
       }
       fam = $families[id] = new Family(require);
+      onFamilyAdded(fam);
 
       return fam;
     };
@@ -644,18 +677,26 @@
     */
     Ecs.prototype.$s = function (key, system) {
       // perhaps add to $systems
+
+      if (typeof key === 'object') {
+        system = key;
+        key = uuid();
+      }
+
       $systems[key] = system; // todo: make a system class?
+
+      var $priority = system.$priority || 0;
 
       //this.$systemsQueue.unshift(system);  // todo: still needed?
 
       system.$family = this.$f(system.$require); // todo: later only store id?
 
       if (system.$addEntity) {
-        system.$family.entityAdded.add(system.$addEntity, system);
+        system.$family.entityAdded.add(system.$addEntity, system, $priority);
       }
 
       if (system.$removeEntity) {
-        system.$family.entityRemoved.add(system.$removeEntity, system);
+        system.$family.entityRemoved.add(system.$removeEntity, system, $priority);
       }
 
       if (isDefined(system.$update)) {
@@ -681,7 +722,7 @@
           };
         }
 
-        this.updated.add(system.$$update, system);
+        this.updated.add(system.$$update, system, $priority);
       }
 
       if (isDefined(system.$updateEach)) {
@@ -695,11 +736,11 @@
             }
           }
         };
-        this.updated.add(system.$$updateEach, system);
+        this.updated.add(system.$$updateEach, system, $priority);
       }
 
       if (isDefined(system.$render)) {
-        this.rendered.add(system.$render, system);
+        this.rendered.add(system.$render, system, $priority);
       }
 
       if (isDefined(system.$renderEach)) {
@@ -716,11 +757,11 @@
       }
 
       if (isDefined(system.$started)) {
-        this.started.add(system.$started, system);
+        this.started.add(system.$started, system, $priority);
       }
 
       if (isDefined(system.$stopped)) {
-        this.stopped.add(system.$stopped, system);
+        this.stopped.add(system.$stopped, system, $priority);
       }
 
       if (isDefined(system.$added)) {
@@ -804,6 +845,12 @@
       delete this.entities[e._id];
     };
 
+    function onFamilyAdded(family) {
+      angular.forEach($entities, function (e) {
+        family.addIfMatch(e);
+      });
+    }
+
     function onComponentAdded(entity, key) {
       angular.forEach($families, function (family) {
         if (family.require && key && family.require.indexOf(key) < 0) {
@@ -838,6 +885,8 @@
     };
 
     Ecs.prototype.$runLoop = function () {
+
+      window.cancelAnimationFrame(this.$requestId);
 
       var self = this,
           now,
@@ -892,6 +941,7 @@
     * @description Stops the game loop
     */
     Ecs.prototype.$stop = function () {
+      console.log('stop');
       this.$playing = false;
       window.cancelAnimationFrame(this.$requestId);
       this.stopped.dispatch();
@@ -910,6 +960,30 @@
       }
       this.$paused = false;
       this.$runLoop();
+    };
+
+    var TYPED_ARRAY_REGEXP = /^\[object (Uint8(Clamped)?)|(Uint16)|(Uint32)|(Int8)|(Int16)|(Int32)|(Float(32)|(64))Array\]$/;
+    function isTypedArray(value) {
+      return TYPED_ARRAY_REGEXP.test(Object.prototype.toString.call(value));
+    }
+
+    // deep copy objects removing $ props
+    // must start with object,
+    // skips keys that start with $
+    // navigates down objects but not other times (including arrays)
+    Ecs.prototype.$copyState = function ssCopy(src) {
+      var dst = {};
+      for (var key in src) {
+        if (src.hasOwnProperty(key) && key.charAt(0) !== '$') {
+          var s = src[key];
+          if (angular.isObject(s) && !isTypedArray(s) && !angular.isArray(s) && !angular.isDate(s)) {
+            dst[key] = ssCopy(s);
+          } else if (typeof s !== 'function') {
+            dst[key] = s;
+          }
+        }
+      }
+      return dst;
     };
 
     return new Ecs();

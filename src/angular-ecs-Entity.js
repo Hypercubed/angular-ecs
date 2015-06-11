@@ -139,59 +139,58 @@
       return this;
     };
 
-    function createComponent(e, key, instance) {
+    function createComponent(e, name, state) {
 
-      if (!$components.hasOwnProperty(key)) {  // not a registered component
-        return instance;
+      // not a registered component
+      if (!$components.hasOwnProperty(name)) {
+        return state;
       }
 
-      var Component = $components[key];
+      var Type = $components[name];
 
-      if (angular.isFunction(Component)) {  // constructor
-        if (instance instanceof Component) {  // already an instance
-          return instance;
-        } else {
-          if (angular.isDefined(Component.$inject)) {
-            return instantiate(Component, instance, e);
-          } else {
-            return angular.extend(new Component(e), instance);
-          }
-        }
-      } else {                                // prototype
-        return angular.copy(instance, Object.create(Component));
+      // not valid constructor
+      if (!angular.isFunction(Type)) {
+        throw new TypeError('Component constructor may only be an Object or function');
+        return;
       }
+
+      // already an instance
+      if (state instanceof Type) {
+        return state;
+      }
+
+      // inject
+      if (Type.$inject) {
+        return instantiate(Type, e, state);
+      }
+
+      return angular.extend(new Type(e), state);
 
     }
 
-    function instantiate(Type, locals, e) {
+    function instantiate(Type, e, state) {
       var $inject = Type.$inject;
 
-      var args = [], i, length, key, arg;
+      var length = $inject.length, args = new Array(length), i;
 
-      for (i = 0, length = $inject.length; i < length; i++) {
-        key = $inject[i];  // todo: throw error if invalid
-
-        arg = locals.hasOwnProperty(key)
-          ? locals[key]
-          : getService(key, e);
-
-        args.push(arg);
+      for (i = 0; i < length; ++i) {
+        args[i] = getValue(e, $inject[i], state);
       }
 
       var instance = Object.create(Type.prototype || null);
       Type.apply(instance, args);
       return instance;
-
     }
 
-    function getService(key, caller) {
-      if (key === '$parent') { return caller; }
+    function getValue(e, key, state) {
+      if (key === '$parent') { return e; }
+      if (key === '$state')  { return state; }
       //if (key === '$world') { return ngEcs; }  // todo
-      return undefined;
+      return state[key];
     }
 
-    function isComponent(key) {
-      return key.charAt(0) !== '$' && key.charAt(0) !== '_';
+    function isComponent(name) {
+      return name.charAt(0) !== '$' && name.charAt(0) !== '_';
     }
 
     /**

@@ -26,7 +26,7 @@
       var timestamp = new Date().getUTCMilliseconds();
       return '' + _uuid++ + '_' + timestamp;
     }
-    
+
     function Ecs(opts) {
       this.components = $components;
       this.systems = $systems;
@@ -70,11 +70,39 @@
     * @description Adds a component contructor
     *
     * @param {string} key component key
-    * @param {function|object} constructor component constructor or prototype
+    * @param {function|object|array} constructor Component constructor fn (optionally decorated with DI annotations in the array notation) or constructor prototype object
     */
     Ecs.prototype.$c = function(key, constructor) {  // perhaps add to $components
-      $components[key] = constructor;
+      if (typeof key !== 'string') {
+        throw new TypeError('A components name is required');
+      }
+      return $components[key] = makeConstructor(key, constructor);
     };
+
+    function makeConstructor(name, O) {
+
+      if (angular.isArray(O)) {
+        var T = O.pop();
+        T.$inject = O;
+        O = T;
+      };
+
+      if (angular.isFunction(O))  { return O; }
+
+      if (typeof O !== 'object') {
+        throw new TypeError('Component constructor may only be an Object or function');
+      }
+
+      var Constructor = new Function(
+        'return function ' + name + '( instance ){ angular.extend(this, instance); }'
+      )();
+
+      Constructor.prototype = O;
+      Constructor.prototype.constructor = Constructor;
+      Constructor.$inject = ['$state'];
+
+      return Constructor;
+    }
 
     /**
     * @ngdoc service
@@ -108,24 +136,26 @@
     * @param {object} instance system configuration
     */
     Ecs.prototype.$s = function(key, system) {  // perhaps add to $systems
-      
+
       if (typeof key === 'object') {
         system = key;
         key = uuid();
       }
-      
+
       $systems[key] = system;  // todo: make a system class?
+
+      var $priority = system.$priority || 0;
 
       //this.$systemsQueue.unshift(system);  // todo: still needed?
 
       system.$family = this.$f(system.$require);  // todo: later only store id?
 
       if (system.$addEntity) {
-        system.$family.entityAdded.add(system.$addEntity, system);
+        system.$family.entityAdded.add(system.$addEntity, system, $priority);
       }
 
       if (system.$removeEntity) {
-        system.$family.entityRemoved.add(system.$removeEntity, system);
+        system.$family.entityRemoved.add(system.$removeEntity, system, $priority);
       }
 
       if (isDefined(system.$update)) {
@@ -145,7 +175,7 @@
           };
         }
 
-        this.updated.add(system.$$update, system);
+        this.updated.add(system.$$update, system, $priority);
       }
 
       if (isDefined(system.$updateEach)) {
@@ -157,11 +187,11 @@
             }
           }
         };
-        this.updated.add(system.$$updateEach, system);
+        this.updated.add(system.$$updateEach, system, $priority);
       }
 
       if (isDefined(system.$render)) {
-        this.rendered.add(system.$render, system);
+        this.rendered.add(system.$render, system, $priority);
       }
 
       if (isDefined(system.$renderEach)) {
@@ -177,11 +207,11 @@
       }
 
       if (isDefined(system.$started)) {
-        this.started.add(system.$started, system);
+        this.started.add(system.$started, system, $priority);
       }
 
       if (isDefined(system.$stopped)) {
-        this.stopped.add(system.$stopped, system);
+        this.stopped.add(system.$stopped, system, $priority);
       }
 
       if (isDefined(system.$added)) {
@@ -266,7 +296,7 @@
       delete this.entities[e._id];
 
     };
-    
+
     function onFamilyAdded(family) {
       angular.forEach($entities, function(e) {
         family.addIfMatch(e);
@@ -303,6 +333,8 @@
     };
 
     Ecs.prototype.$runLoop = function() {
+
+      window.cancelAnimationFrame(this.$requestId);
 
       var self = this,
         now,
@@ -353,6 +385,7 @@
     * @description Stops the game loop
     */
     Ecs.prototype.$stop = function() {
+      console.log('stop');
       this.$playing = false;
       window.cancelAnimationFrame(this.$requestId);
       this.stopped.dispatch();
@@ -368,6 +401,30 @@
       this.$paused = false;
       this.$runLoop();
     };
+
+    var TYPED_ARRAY_REGEXP = /^\[object (Uint8(Clamped)?)|(Uint16)|(Uint32)|(Int8)|(Int16)|(Int32)|(Float(32)|(64))Array\]$/;
+    function isTypedArray(value) {
+      return TYPED_ARRAY_REGEXP.test(Object.prototype.toString.call(value));
+    }
+
+    // deep copy objects removing $ props
+    // must start with object,
+    // skips keys that start with $
+    // navigates down objects but not other times (including arrays)
+    Ecs.prototype.$copyState = function ssCopy(src) {
+      var dst = {};
+      for (var key in src) {
+        if (src.hasOwnProperty(key) && key.charAt(0) !== '$') {
+          var s = src[key];
+          if (angular.isObject(s) && !isTypedArray(s) && !angular.isArray(s) && !angular.isDate(s)) {
+            dst[key] = ssCopy(s);
+          } else if (typeof s !== 'function') {
+            dst[key] = s;
+          }
+        }
+      }
+      return dst;
+    }
 
     return new Ecs();
 

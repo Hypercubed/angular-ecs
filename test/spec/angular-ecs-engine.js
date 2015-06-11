@@ -41,6 +41,23 @@ describe('engine', function () {
 
   }));
 
+  it('should copy state', function () {
+
+    var c = ngEcs.$copyState({
+      x: 1,
+      y: 2,
+      $z: 3,
+      _q: 4,
+      r: function() {}
+    });
+
+    expect(c.x).toBe(1);
+    expect(c.y).toBe(2);
+    expect(c.$z).toBeUndefined();
+    expect(c._q).toBe(4);
+    expect(c.r).toBeUndefined();
+  });
+
   it('should setup engine', function () {
     expect(ngEcs).toBeDefined();
     expect(ngEcs.components).toBeDefined();
