@@ -41,23 +41,6 @@ describe('engine', function () {
 
   }));
 
-  it('should copy state', function () {
-
-    var c = ngEcs.$copyState({
-      x: 1,
-      y: 2,
-      $z: 3,
-      _q: 4,
-      r: function() {}
-    });
-
-    expect(c.x).toBe(1);
-    expect(c.y).toBe(2);
-    expect(c.$z).toBeUndefined();
-    expect(c._q).toBe(4);
-    expect(c.r).toBeUndefined();
-  });
-
   it('should setup engine', function () {
     expect(ngEcs).toBeDefined();
     expect(ngEcs.components).toBeDefined();
@@ -109,7 +92,45 @@ describe('engine', function () {
     expect($systems.test2.$updateEach.calls.length).toBe(6);
   });
 
+  it('should not call update and updateEach on removed systems', function () {
+
+    ngEcs.$e({ 'test' :{} });
+    ngEcs.$e({ 'test' :{} });
+    ngEcs.$e({ 'test2' :{} });
+    ngEcs.$e({ 'test2' :{} });
+    ngEcs.$e({ 'test2' :{} });
+
+    ngEcs.$$removeSystem($systems.test2);
+
+    ngEcs.$update();
+    ngEcs.$update();
+
+    expect($systems.test.$update.calls.length).toBe(2);
+    expect($systems.test.$updateEach.calls.length).toBe(10);
+    expect($systems.test2.$update.calls.length).toBe(0);
+    expect($systems.test2.$updateEach.calls.length).toBe(0);
+  });
+
   it('should call render and renderEach on each system', function () {
+
+    ngEcs.$e({ 'test' :{} });
+    ngEcs.$e({ 'test' :{} });
+    ngEcs.$e({ 'test2' :{} });
+    ngEcs.$e({ 'test2' :{} });
+    ngEcs.$e({ 'test2' :{} });
+
+    ngEcs.$$removeSystem($systems.test2);
+
+    ngEcs.$render();
+    ngEcs.$render();
+
+    expect($systems.test.$render.calls.length).toBe(2);
+    expect($systems.test.$renderEach.calls.length).toBe(10);
+    expect($systems.test2.$render.calls.length).toBe(0);
+    expect($systems.test2.$renderEach.calls.length).toBe(0);
+  });
+
+  it('should not call render and renderEach on removed system', function () {
 
     ngEcs.$e({ 'test' :{} });
     ngEcs.$e({ 'test' :{} });
@@ -223,6 +244,32 @@ describe('engine', function () {
       expect(sys.$renderEach.calls.length).toBe(2*5);
     });
 
+  });
+
+  it('should copy state', function () {
+
+    var c = ngEcs.$copyState({
+      x: 1,
+      y: 2,
+      $z: 3,
+      _q: 4,
+      r: function() {},
+      s: {
+        a: 1,
+        $b: 2,
+        _c: 3
+      }
+    });
+
+    expect(c.x).toBe(1);
+    expect(c.y).toBe(2);
+    expect(c.$z).toBeUndefined();
+    expect(c._q).toBe(4);
+    expect(c.r).toBeUndefined();
+    expect(c.s.a).toBe(1);
+    expect(c.s.a).toBe(1);
+    expect(c.s.$b).toBeUndefined();
+    expect(c.s._c).toBe(3);
   });
 
 });

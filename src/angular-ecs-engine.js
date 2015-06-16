@@ -142,11 +142,9 @@
         key = uuid();
       }
 
-      $systems[key] = system;  // todo: make a system class?
+      $systems[key] = system;  // todo: make a system class?  Error if already existing.
 
       var $priority = system.$priority || 0;
-
-      //this.$systemsQueue.unshift(system);  // todo: still needed?
 
       system.$family = this.$f(system.$require);  // todo: later only store id?
 
@@ -157,6 +155,16 @@
       if (system.$removeEntity) {
         system.$family.entityRemoved.add(system.$removeEntity, system, $priority);
       }
+
+      this.$$addSystem($systems[key]);
+
+      return system;
+
+    };
+
+    Ecs.prototype.$$addSystem = function(system) {
+
+      var $priority = system.$priority || 0;
 
       if (isDefined(system.$update)) {
 
@@ -218,7 +226,45 @@
         system.$added();
       }
 
-      return system;
+      return this;
+    };
+
+    Ecs.prototype.$$removeSystem = function(system) {  // perhaps add to $systems
+
+      if (typeof system === 'string') {
+        system = $systems[key];
+      }
+
+      if (isDefined(system.$$update)) {
+        this.updated.remove(system.$$update, system);
+      }
+
+      if (isDefined(system.$$updateEach)) {
+        this.updated.remove(system.$$updateEach, system);
+      }
+
+      if (isDefined(system.$render)) {
+        this.rendered.remove(system.$render, system);
+      }
+
+      if (isDefined(system.$$renderEach)) {
+        this.rendered.remove(system.$$renderEach, system);
+      }
+
+      if (isDefined(system.$started)) {
+        this.started.remove(system.$started, system);
+      }
+
+      if (isDefined(system.$stopped)) {
+        this.stopped.remove(system.$stopped, system);
+      }
+
+      if (isDefined(system.$removed)) {
+        system.$removed();
+      }
+
+      return this;
+
     };
 
     /**
@@ -273,6 +319,7 @@
       e.$componentRemoved.add(onComponentRemoved, this);
 
       $entities[e._id] = e;
+
       return e;
     };
 
@@ -294,6 +341,8 @@
       e.$componentRemoved.dispose();
 
       delete this.entities[e._id];
+
+      return this;
 
     };
 
@@ -385,7 +434,6 @@
     * @description Stops the game loop
     */
     Ecs.prototype.$stop = function() {
-      console.log('stop');
       this.$playing = false;
       window.cancelAnimationFrame(this.$requestId);
       this.stopped.dispatch();

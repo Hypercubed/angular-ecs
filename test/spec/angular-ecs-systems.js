@@ -55,7 +55,7 @@ describe('systems', function () {
     ngEcs.$s('test', {});
     expect($systems.test.$family).toBe($families['::']);
   });
-  
+
   it('should auto generate system names', function () {
     var s = ngEcs.$s({
       test: 123
@@ -270,6 +270,52 @@ describe('systems', function () {
 
     expect($systems.system1.$family).toBe($systems.system5.$family);
     expect($systems.system1.$family).toNotBe($systems.system2.$family);
+
+  });
+
+  it('should set default priority', function() {
+
+    var i = 0;
+
+    ngEcs.$s('system0', {
+      $update: function(e,dt) {
+        expect(i++).toBe(0);
+      }
+    });
+
+    ngEcs.$s('system10', {
+      $update: function(e,dt) {
+        expect(i++).toBe(1);
+      }
+    });
+
+    ngEcs.$e();
+
+    ngEcs.$update();
+
+  });
+
+  it('should set $priority', function() {
+
+    var i = 0;
+
+    ngEcs.$s('system0', {
+      $priority: 10,
+      $update: function(e,dt) {
+        expect(i++).toBe(1);
+      }
+    });
+
+    ngEcs.$s('system10', {
+      $priority: 100,
+      $update: function(e,dt) {
+        expect(i++).toBe(0);
+      }
+    });
+
+    ngEcs.$e();
+
+    ngEcs.$update();
 
   });
 
