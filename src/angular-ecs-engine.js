@@ -166,36 +166,53 @@
 
       var $priority = system.$priority || 0;
 
-      if (isDefined(system.$update)) {
+      var _update = isDefined(system.$update);
+      var _updateEach = isDefined(system.$updateEach);
+
+      if (_update || _updateEach) {
+
+        system.$$updateEach = _updateEach ?
+          function(time) {
+            var arr = this.$family,i = arr.length;
+            while (i--) {
+              if (i in arr) {
+                this.$updateEach(arr[i], time);
+              }
+            }
+          } : angular.noop;  // noop should actually never be used
+
+        var $$update;
+        if (_updateEach && _update) {  // update and updateEach
+          $$update = (function(dt) {
+            if (system.$family.length > 0) {
+              this.$update(dt);
+              this.$$updateEach(dt);
+            }
+          }).bind(system);
+        } else if (_update) {          // only update
+          $$update = (function(dt) {
+            if (system.$family.length > 0) {
+              this.$update(dt);
+            }
+          }).bind(system);
+        } else {                       // only updateEach
+          $$update = system.$$updateEach;
+        }
 
         if (isDefined(system.interval)) {  // add tests for interval
           system.acc = isDefined(system.acc) ? system.acc : 0;
           system.$$update = function(dt) {
             this.acc += dt;
             if (this.acc > this.interval) {
-              if (system.$family.length > 0) { this.$update(this.interval); }
+              $$update(this.interval);
               this.acc = this.acc - this.interval;
             }
           };
         } else {
-          system.$$update = function(dt) {  // can be system prototype
-            if (system.$family.length > 0) { this.$update(dt); }
-          };
+          system.$$update = $$update;
         }
 
         this.updated.add(system.$$update, system, $priority);
-      }
-
-      if (isDefined(system.$updateEach)) {
-        system.$$updateEach = function(time) {  // can be system prototype, bug: updateEach doesn't respect interval
-          var arr = this.$family,i = arr.length;
-          while (i--) {
-            if (i in arr) {
-              this.$updateEach(arr[i], time);
-            }
-          }
-        };
-        this.updated.add(system.$$updateEach, system, $priority);
       }
 
       if (isDefined(system.$render)) {
@@ -239,9 +256,9 @@
         this.updated.remove(system.$$update, system);
       }
 
-      if (isDefined(system.$$updateEach)) {
-        this.updated.remove(system.$$updateEach, system);
-      }
+      //if (isDefined(system.$$updateEach)) {
+      //  this.updated.remove(system.$$updateEach, system);
+      //}
 
       if (isDefined(system.$render)) {
         this.rendered.remove(system.$render, system);
