@@ -126,6 +126,8 @@
   .provider('$families', MapProvider);
 })();
 
+/* global MiniSignal */
+
 // Entity
 (function () {
 
@@ -161,8 +163,11 @@
       }
       this._id = id || uuid();
 
-      this.$componentAdded = new signals.Signal();
-      this.$componentRemoved = new signals.Signal();
+      this.$componentAdded = new MiniSignal();
+      this.$componentRemoved = new MiniSignal();
+
+      //this.$componentAdded = new signals.Signal();
+      //this.$componentRemoved = new signals.Signal();
 
       this.$$signals = {};
     }
@@ -186,7 +191,7 @@
     Entity.prototype.$on = function (name, listener) {
       var sig = this.$$signals[name];
       if (!sig) {
-        this.$$signals[name] = sig = new signals.Signal();
+        this.$$signals[name] = sig = new MiniSignal();
       }
       return sig.add(listener, this);
     };
@@ -280,7 +285,6 @@
       // not valid constructor
       if (!angular.isFunction(Type)) {
         throw new TypeError('Component constructor may only be an Object or function');
-        return;
       }
 
       // already an instance
@@ -355,6 +359,8 @@
   }]);
 })();
 
+/* global MiniSignal */
+
 // Entity
 (function () {
 
@@ -395,7 +401,7 @@
     */
     Object.defineProperty(_this, 'entityAdded', {
       enumerable: false,
-      value: new signals.Signal()
+      value: new MiniSignal()
     });
 
     /**
@@ -408,7 +414,7 @@
     */
     Object.defineProperty(_this, 'entityRemoved', {
       enumerable: false,
-      value: new signals.Signal()
+      value: new MiniSignal()
     });
 
     for (var method in Family.prototype) {
@@ -531,6 +537,7 @@
 })();
 
 /* global signals */
+/* global MiniSignal */
 
 // engine
 (function () {
@@ -583,15 +590,25 @@
       this.$interval = 1;
       //this.$systemsQueue = [];  // make $scenes?  Signal?
 
-      this.started = new signals.Signal();
+      /* this.started = new signals.Signal();
       this.stopped = new signals.Signal();
+       this.updated = new signals.Signal();
+      this.rendered = new signals.Signal(); */
 
-      this.updated = new signals.Signal();
-      this.rendered = new signals.Signal();
+      this.started = new MiniSignal();
+      this.stopped = new MiniSignal();
 
-      this.rendered.add(function () {
+      this.updated = new MiniSignal();
+      this.rendered = new MiniSignal();
+
+      this.beforeUpdate = new MiniSignal();
+      this.afterUpdate = new MiniSignal();
+      this.beforeRender = new MiniSignal();
+      this.afterRender = new MiniSignal();
+
+      this.afterRender.add(function () {
         $rootScope.$applyAsync();
-      }, null, -1);
+      });
 
       angular.extend(this, opts);
     }
@@ -613,7 +630,8 @@
       if (typeof key !== 'string') {
         throw new TypeError('A components name is required');
       }
-      return $components[key] = makeConstructor(key, constructor);
+      $components[key] = makeConstructor(key, constructor);
+      return $components[key];
     };
 
     function makeConstructor(name, O) {
@@ -622,7 +640,7 @@
         var T = O.pop();
         T.$inject = O;
         O = T;
-      };
+      }
 
       if (angular.isFunction(O)) {
         return O;
@@ -704,7 +722,7 @@
 
     Ecs.prototype.$$addSystem = function (system) {
 
-      var $priority = system.$priority || 0;
+      //var $priority = system.$priority || 0;
 
       var _update = isDefined(system.$update);
       var _updateEach = isDefined(system.$updateEach);
@@ -756,11 +774,11 @@
           system.$$update = $$update;
         }
 
-        this.updated.add(system.$$update, system, $priority);
+        system.$$updateBinding = this.updated.add(system.$$update.bind(system));
       }
 
       if (isDefined(system.$render)) {
-        this.rendered.add(system.$render, system, $priority);
+        system.$renderBinding = this.rendered.add(system.$render.bind(system));
       }
 
       if (isDefined(system.$renderEach)) {
@@ -773,15 +791,15 @@
             }
           }
         };
-        this.rendered.add(system.$$renderEach, system);
+        system.$$renderEachBinding = this.rendered.add(system.$$renderEach.bind(system));
       }
 
       if (isDefined(system.$started)) {
-        this.started.add(system.$started, system, $priority);
+        system.$startedBinding = this.started.add(system.$started.bind(system));
       }
 
       if (isDefined(system.$stopped)) {
-        this.stopped.add(system.$stopped, system, $priority);
+        system.$stoppedBinding = this.stopped.add(system.$stopped.bind(system));
       }
 
       if (isDefined(system.$added)) {
@@ -795,36 +813,16 @@
       // perhaps add to $systems
 
       if (typeof system === 'string') {
-        system = $systems[key];
+        system = $systems[system];
       }
 
-      if (isDefined(system.$$update)) {
-        this.updated.remove(system.$$update, system);
-      }
+      if (isDefined(system.$$updateBinding)) system.$$updateBinding.detach();
+      if (isDefined(system.$renderBinding)) system.$renderBinding.detach();
+      if (isDefined(system.$$renderEachBinding)) system.$$renderEachBinding.detach();
+      if (isDefined(system.$startedBinding)) system.$startedBinding.detach();
+      if (isDefined(system.$stoppedBinding)) system.$stoppedBinding.remove();
 
-      //if (isDefined(system.$$updateEach)) {
-      //  this.updated.remove(system.$$updateEach, system);
-      //}
-
-      if (isDefined(system.$render)) {
-        this.rendered.remove(system.$render, system);
-      }
-
-      if (isDefined(system.$$renderEach)) {
-        this.rendered.remove(system.$$renderEach, system);
-      }
-
-      if (isDefined(system.$started)) {
-        this.started.remove(system.$started, system);
-      }
-
-      if (isDefined(system.$stopped)) {
-        this.stopped.remove(system.$stopped, system);
-      }
-
-      if (isDefined(system.$removed)) {
-        system.$removed();
-      }
+      if (isDefined(system.$removed)) system.$removed();
 
       return this;
     };
@@ -898,8 +896,8 @@
         family.remove(e);
       });
 
-      e.$componentAdded.dispose();
-      e.$componentRemoved.dispose();
+      e.$componentAdded.detachAll();
+      e.$componentRemoved.detachAll();
 
       delete this.entities[e._id];
 
@@ -960,15 +958,22 @@
         if (!self.$playing || self.$paused) {
           return;
         }
+
         now = window.performance.now();
         DT = Math.min(1, (now - last) / 1000);
         dt = dt + DT;
         step = 1 / self.$fps;
+
+        self.beforeUpdate.dispatch();
         while (dt > step) {
           dt = dt - step;
           self.$update(step);
         }
+        self.afterUpdate.dispatch();
+
+        self.beforeRender.dispatch();
         self.$render(DT);
+        self.afterRender.dispatch();
 
         last = now;
         self.$requestId = window.requestAnimationFrame(frame);

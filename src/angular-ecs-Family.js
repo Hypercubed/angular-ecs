@@ -1,3 +1,5 @@
+/* global MiniSignal */
+
 // Entity
 (function() {
 
@@ -38,7 +40,7 @@
     */
     Object.defineProperty(_this, 'entityAdded', {
       enumerable: false,
-      value: new signals.Signal()
+      value: new MiniSignal()
     });
 
     /**
@@ -51,7 +53,7 @@
     */
     Object.defineProperty(_this, 'entityRemoved', {
       enumerable: false,
-      value: new signals.Signal()
+      value: new MiniSignal()
     });
 
     for (var method in Family.prototype) {

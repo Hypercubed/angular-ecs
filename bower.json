@@ -2,7 +2,7 @@
   "name": "angular-ecs",
   "version": "0.0.21",
   "dependencies": {
-    "js-signals": "~1.0.0"
+    "mini-signals": "~1.0.1"
   },
   "devDependencies": {
     "angular": "latest",

@@ -1,3 +1,5 @@
+/* global MiniSignal */
+
 // Entity
 (function() {
 
@@ -33,8 +35,11 @@
       }
       this._id = id || uuid();
 
-      this.$componentAdded = new signals.Signal();
-      this.$componentRemoved = new signals.Signal();
+      this.$componentAdded = new MiniSignal();
+      this.$componentRemoved = new MiniSignal();
+
+      //this.$componentAdded = new signals.Signal();
+      //this.$componentRemoved = new signals.Signal();
 
       this.$$signals = {};
 
@@ -59,7 +64,7 @@
     Entity.prototype.$on = function(name, listener) {
       var sig = this.$$signals[name];
       if (!sig) {
-        this.$$signals[name] = sig = new signals.Signal();
+        this.$$signals[name] = sig = new MiniSignal();
       }
       return sig.add(listener, this);
     };
@@ -151,7 +156,6 @@
       // not valid constructor
       if (!angular.isFunction(Type)) {
         throw new TypeError('Component constructor may only be an Object or function');
-        return;
       }
 
       // already an instance

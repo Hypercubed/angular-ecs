@@ -28,6 +28,5 @@ _\( managed using [todo-md](https://github.com/Hypercubed/todo-md) \)_
 - [-] System priority
   - [ ] test
 - [ ] Scene manager
-- [x] Add $renderEach
-- [x] Use signals for update and render?
-- [x] Add tests for update, updateEach, render, renderEach
+- [ ] Fix timing issue in tests
+- [ ] Finish or remove Entity#on/#emit
