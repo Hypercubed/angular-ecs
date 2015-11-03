@@ -5,13 +5,12 @@
  * @author Jayson Harshbarger <>
  * @license 
  */
-/* global angular:true */
+/* global angular */
 
 // main
 'use strict';
 
 (function () {
-
   'use strict';
 
   /**
@@ -29,7 +28,6 @@
   */
 
   function MapProvider() {
-
     var map = {};
 
     this.register = function (name, constructor) {
@@ -126,11 +124,10 @@
   .provider('$families', MapProvider);
 })();
 
-/* global MiniSignal */
+/* global MiniSignal, angular */
 
 // Entity
 (function () {
-
   'use strict';
 
   angular.module('hc.ngEcs')
@@ -158,7 +155,7 @@
     * An Entity is bag of game properties (components).  By convention properties that do not start with a $ or _ are considered compoenets.
     * */
     function Entity(id) {
-      if (false === this instanceof Entity) {
+      if (!(this instanceof Entity)) {
         return new Entity(id);
       }
       this._id = id || uuid();
@@ -166,8 +163,8 @@
       this.$componentAdded = new MiniSignal();
       this.$componentRemoved = new MiniSignal();
 
-      //this.$componentAdded = new signals.Signal();
-      //this.$componentRemoved = new signals.Signal();
+      // this.$componentAdded = new signals.Signal();
+      // this.$componentRemoved = new signals.Signal();
 
       this.$$signals = {};
     }
@@ -215,9 +212,7 @@
     */
     Entity.prototype.$emit = function (name) {
       var sig = this.$$signals[name];
-      if (!sig) {
-        return;
-      } // throw error?
+      if (!sig) return; // throw error?
 
       if (arguments.length > 1) {
         var args = Array.prototype.slice.call(arguments, 1);
@@ -249,7 +244,6 @@
       * @returns {Entity} The entity
       */
     Entity.prototype.$add = function (key, instance) {
-
       if (!key) {
         throw new Error('Can\'t add component with undefined key.');
       }
@@ -274,7 +268,6 @@
     };
 
     function createComponent(e, name, state) {
-
       // not a registered component
       if (!$components.hasOwnProperty(name)) {
         return state;
@@ -303,11 +296,10 @@
     function instantiate(Type, e, state) {
       var $inject = Type.$inject;
 
-      var length = $inject.length,
-          args = new Array(length),
-          i;
+      var length = $inject.length;
+      var args = new Array(length);
 
-      for (i = 0; i < length; ++i) {
+      for (var i = 0; i < length; ++i) {
         args[i] = getValue(e, $inject[i], state);
       }
 
@@ -323,7 +315,7 @@
       if (key === '$state') {
         return state;
       }
-      //if (key === '$world') { return ngEcs; }  // todo
+      // if (key === '$world') { return ngEcs; }  // todo
       return state[key];
     }
 
@@ -359,11 +351,10 @@
   }]);
 })();
 
-/* global MiniSignal */
+/* global MiniSignal, angular */
 
 // Entity
 (function () {
-
   'use strict';
 
   /**
@@ -536,12 +527,10 @@
   .constant('Family', Family);
 })();
 
-/* global signals */
-/* global MiniSignal */
+/* global MiniSignal, angular */
 
 // engine
 (function () {
-
   'use strict';
 
   angular.module('hc.ngEcs')
@@ -559,7 +548,6 @@
   * ECS engine. Contain System, Components, and Entities.
   * */
   .service('ngEcs', ['$rootScope', '$log', '$timeout', '$components', '$systems', '$entities', '$families', 'Entity', 'Family', function ($rootScope, $log, $timeout, $components, $systems, $entities, $families, Entity, Family) {
-
     var _uuid = 0;
     function uuid() {
       var timestamp = new Date().getUTCMilliseconds();
@@ -582,13 +570,13 @@
         this.$e(value);
       });
 
-      //this.$timer = null;
+      // this.$timer = null;
       this.$playing = false;
-      //this.$delay = 1000;
+      // this.$delay = 1000;
       this.$requestId = null;
       this.$fps = 60;
       this.$interval = 1;
-      //this.$systemsQueue = [];  // make $scenes?  Signal?
+      // this.$systemsQueue = [];  // make $scenes?  Signal?
 
       /* this.started = new signals.Signal();
       this.stopped = new signals.Signal();
@@ -635,7 +623,6 @@
     };
 
     function makeConstructor(name, O) {
-
       if (angular.isArray(O)) {
         var T = O.pop();
         T.$inject = O;
@@ -650,7 +637,9 @@
         throw new TypeError('Component constructor may only be an Object or function');
       }
 
+      /* eslint-disable no-new-func */
       var Constructor = new Function('return function ' + name + '( instance ){ angular.extend(this, instance); }')();
+      /* eslint-enable no-new-func */
 
       Constructor.prototype = O;
       Constructor.prototype.constructor = Constructor;
@@ -703,16 +692,16 @@
 
       $systems[key] = system; // todo: make a system class?  Error if already existing.
 
-      var $priority = system.$priority || 0;
+      // var $priority = system.$priority || 0;
 
       system.$family = this.$f(system.$require); // todo: later only store id?
 
       if (system.$addEntity) {
-        system.$family.entityAdded.add(system.$addEntity, system, $priority);
+        system.$family.entityAdded.add(system.$addEntity, system);
       }
 
       if (system.$removeEntity) {
-        system.$family.entityRemoved.add(system.$removeEntity, system, $priority);
+        system.$family.entityRemoved.add(system.$removeEntity, system);
       }
 
       this.$$addSystem($systems[key]);
@@ -721,20 +710,18 @@
     };
 
     Ecs.prototype.$$addSystem = function (system) {
-
-      //var $priority = system.$priority || 0;
+      // var $priority = system.$priority || 0;
 
       var _update = isDefined(system.$update);
       var _updateEach = isDefined(system.$updateEach);
 
       if (_update || _updateEach) {
-
         system.$$updateEach = _updateEach ? function (time) {
-          var arr = this.$family,
-              i = arr.length;
+          var arr = system.$family;
+          var i = arr.length;
           while (i--) {
             if (i in arr) {
-              this.$updateEach(arr[i], time);
+              system.$updateEach(arr[i], time);
             }
           }
         } : angular.noop; // noop should actually never be used
@@ -742,19 +729,19 @@
         var $$update;
         if (_updateEach && _update) {
           // update and updateEach
-          $$update = (function (dt) {
+          $$update = function (dt) {
             if (system.$family.length > 0) {
-              this.$update(dt);
-              this.$$updateEach(dt);
+              system.$update(dt);
+              system.$$updateEach(dt);
             }
-          }).bind(system);
+          };
         } else if (_update) {
           // only update
-          $$update = (function (dt) {
+          $$update = function (dt) {
             if (system.$family.length > 0) {
-              this.$update(dt);
+              system.$update(dt);
             }
-          }).bind(system);
+          };
         } else {
           // only updateEach
           $$update = system.$$updateEach;
@@ -764,42 +751,42 @@
           // add tests for interval
           system.acc = isDefined(system.acc) ? system.acc : 0;
           system.$$update = function (dt) {
-            this.acc += dt;
-            if (this.acc > this.interval) {
-              $$update(this.interval);
-              this.acc = this.acc - this.interval;
+            system.acc += dt;
+            if (system.acc > system.interval) {
+              $$update(system.interval);
+              system.acc = system.acc - system.interval;
             }
           };
         } else {
           system.$$update = $$update;
         }
 
-        system.$$updateBinding = this.updated.add(system.$$update.bind(system));
+        system.$$updateBinding = this.updated.add(system.$$update, system);
       }
 
       if (isDefined(system.$render)) {
-        system.$renderBinding = this.rendered.add(system.$render.bind(system));
+        system.$renderBinding = this.rendered.add(system.$render, system);
       }
 
       if (isDefined(system.$renderEach)) {
         system.$$renderEach = function () {
-          var arr = this.$family,
-              i = arr.length;
+          var arr = system.$family;
+          var i = arr.length;
           while (i--) {
             if (i in arr) {
-              this.$renderEach(arr[i]);
+              system.$renderEach(arr[i]);
             }
           }
         };
-        system.$$renderEachBinding = this.rendered.add(system.$$renderEach.bind(system));
+        system.$$renderEachBinding = this.rendered.add(system.$$renderEach, system);
       }
 
       if (isDefined(system.$started)) {
-        system.$startedBinding = this.started.add(system.$started.bind(system));
+        system.$startedBinding = this.started.add(system.$started, system);
       }
 
       if (isDefined(system.$stopped)) {
-        system.$stoppedBinding = this.stopped.add(system.$stopped.bind(system));
+        system.$stoppedBinding = this.stopped.add(system.$stopped, system);
       }
 
       if (isDefined(system.$added)) {
@@ -852,7 +839,7 @@
     * @return {Entity} The Entity
     */
     Ecs.prototype.$e = function (id, instance) {
-      //var self = this;
+      // var self = this;
 
       if (typeof id === 'object') {
         instance = id;
@@ -883,7 +870,6 @@
     };
 
     Ecs.prototype.$$removeEntity = function (e) {
-
       e.$world = null;
 
       angular.forEach(e, function (value, key) {
@@ -944,15 +930,13 @@
     };
 
     Ecs.prototype.$runLoop = function () {
-
       window.cancelAnimationFrame(this.$requestId);
 
-      var self = this,
-          now,
-          last = window.performance.now(),
-          dt = 0,
-          DT = 0,
-          step;
+      var self = this;
+      var last = window.performance.now();
+      var dt = 0;
+      var DT = 0;
+      var now, step;
 
       function frame() {
         if (!self.$playing || self.$paused) {
@@ -1082,6 +1066,7 @@
     };
   })();
 
+  /* eslint-disable no-extend-native */
   if (!Function.prototype.bind) {
     Function.prototype.bind = function (oThis) {
       if (typeof this !== 'function') {
@@ -1090,10 +1075,10 @@
         throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
       }
 
-      var aArgs = Array.prototype.slice.call(arguments, 1),
-          fToBind = this,
-          FNOP = function FNOP() {},
-          fBound = function fBound() {
+      var aArgs = Array.prototype.slice.call(arguments, 1);
+      var fToBind = this;
+      var FNOP = function FNOP() {};
+      var fBound = function fBound() {
         return fToBind.apply(this instanceof FNOP ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments)));
       };
 
@@ -1103,5 +1088,6 @@
       return fBound;
     };
   }
+  /* eslint-enable no-extend-native */
 })();
 //# sourceMappingURL=angular-ecs.js.map

@@ -1,8 +1,7 @@
-/* global MiniSignal */
+/* global MiniSignal, angular */
 
 // Entity
-(function() {
-
+(function () {
   'use strict';
 
   angular.module('hc.ngEcs')
@@ -16,9 +15,9 @@
   *
   * */
 
-  .factory('Entity', function($components) {
+  .factory('Entity', function ($components) {
     var _uuid = 0;
-    function uuid() {
+    function uuid () {
       var timestamp = new Date().getUTCMilliseconds();
       return '' + _uuid++ + '_' + timestamp;
     }
@@ -29,8 +28,8 @@
     * @description
     * An Entity is bag of game properties (components).  By convention properties that do not start with a $ or _ are considered compoenets.
     * */
-    function Entity(id) {
-      if(false === (this instanceof Entity)) {
+    function Entity (id) {
+      if (!(this instanceof Entity)) {
         return new Entity(id);
       }
       this._id = id || uuid();
@@ -38,11 +37,10 @@
       this.$componentAdded = new MiniSignal();
       this.$componentRemoved = new MiniSignal();
 
-      //this.$componentAdded = new signals.Signal();
-      //this.$componentRemoved = new signals.Signal();
+      // this.$componentAdded = new signals.Signal();
+      // this.$componentRemoved = new signals.Signal();
 
       this.$$signals = {};
-
     }
 
     /**
@@ -61,7 +59,7 @@
     * @param {function(event, ...args)} listener Function to call when the event is emitted.
     * @returns {function()} Returns a deregistration function for this listener.
     */
-    Entity.prototype.$on = function(name, listener) {
+    Entity.prototype.$on = function (name, listener) {
       var sig = this.$$signals[name];
       if (!sig) {
         this.$$signals[name] = sig = new MiniSignal();
@@ -86,9 +84,9 @@
     * @param {...*} args Optional one or more arguments which will be passed onto the event listeners.
     * @returns {Entity} The entity
     */
-    Entity.prototype.$emit = function(name) {
+    Entity.prototype.$emit = function (name) {
       var sig = this.$$signals[name];
-      if (!sig) {return;}  // throw error?
+      if (!sig) return; // throw error?
 
       if (arguments.length > 1) {
         var args = Array.prototype.slice.call(arguments, 1);
@@ -119,8 +117,7 @@
       * @param {object} [instance] A component instance or a compoent configuration
       * @returns {Entity} The entity
       */
-    Entity.prototype.$add = function(key, instance) {
-
+    Entity.prototype.$add = function (key, instance) {
       if (!key) {
         throw new Error('Can\'t add component with undefined key.');
       }
@@ -144,8 +141,7 @@
       return this;
     };
 
-    function createComponent(e, name, state) {
-
+    function createComponent (e, name, state) {
       // not a registered component
       if (!$components.hasOwnProperty(name)) {
         return state;
@@ -169,15 +165,15 @@
       }
 
       return angular.extend(new Type(e), state);
-
     }
 
-    function instantiate(Type, e, state) {
+    function instantiate (Type, e, state) {
       var $inject = Type.$inject;
 
-      var length = $inject.length, args = new Array(length), i;
+      var length = $inject.length;
+      var args = new Array(length);
 
-      for (i = 0; i < length; ++i) {
+      for (var i = 0; i < length; ++i) {
         args[i] = getValue(e, $inject[i], state);
       }
 
@@ -186,14 +182,14 @@
       return instance;
     }
 
-    function getValue(e, key, state) {
+    function getValue (e, key, state) {
       if (key === '$parent') { return e; }
-      if (key === '$state')  { return state; }
-      //if (key === '$world') { return ngEcs; }  // todo
+      if (key === '$state') { return state; }
+      // if (key === '$world') { return ngEcs; }  // todo
       return state[key];
     }
 
-    function isComponent(name) {
+    function isComponent (name) {
       return name.charAt(0) !== '$' && name.charAt(0) !== '_';
     }
 
@@ -212,7 +208,7 @@
     * @param {string} key The name of the Component
     * @returns {Entity} The entity
     */
-    Entity.prototype.$remove = function(key) {
+    Entity.prototype.$remove = function (key) {
       // not a component by convention
       if (isComponent(key)) {
         this.$componentRemoved.dispatch(this, key);
@@ -223,5 +219,4 @@
 
     return Entity;
   });
-
 })();

@@ -36,27 +36,28 @@
       window.webkitCancelAnimationFrame ||
       window.msCancelAnimationFrame ||
       window.mozCancelAnimationFrame ||
-      function(id) {
+      function (id) {
         clearTimeout(id);
       });
   })();
 
+  /* eslint-disable no-extend-native */
   if (!Function.prototype.bind) {
-    Function.prototype.bind = function(oThis) {
+    Function.prototype.bind = function (oThis) {
       if (typeof this !== 'function') {
         // closest thing possible to the ECMAScript 5
         // internal IsCallable function
         throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
       }
 
-      var aArgs   = Array.prototype.slice.call(arguments, 1),
-          fToBind = this,
-          FNOP    = function() {},
-          fBound  = function() {
-            return fToBind.apply(this instanceof FNOP ? this
+      var aArgs = Array.prototype.slice.call(arguments, 1);
+      var fToBind = this;
+      var FNOP = function () {};
+      var fBound = function () {
+        return fToBind.apply(this instanceof FNOP ? this
                    : oThis,
                    aArgs.concat(Array.prototype.slice.call(arguments)));
-          };
+      };
 
       FNOP.prototype = this.prototype;
       fBound.prototype = new FNOP();
@@ -64,5 +65,5 @@
       return fBound;
     };
   }
-
+  /* eslint-enable no-extend-native */
 })();

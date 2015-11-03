@@ -1,8 +1,7 @@
-/* global MiniSignal */
+/* global MiniSignal, angular */
 
 // Entity
-(function() {
-
+(function () {
   'use strict';
 
   /**
@@ -13,7 +12,7 @@
   *
   **/
 
-  function Family(require) {
+  function Family (require) {
     var _this = [];
 
     /**
@@ -78,10 +77,10 @@
   * @description
   * Tests if the entity matches the family requirements
   */
-  Family.prototype.isMatch = function(entity) {
+  Family.prototype.isMatch = function (entity) {
     if (!this.require) { return true; }
 
-    return this.require.every(function(d) {
+    return this.require.every(function (d) {
       return entity.hasOwnProperty(d);
     });
   };
@@ -95,7 +94,7 @@
   * @description
   * Adds an entity to this family
   */
-  Family.prototype.add = function(e) {
+  Family.prototype.add = function (e) {
     // check if match?
     var index = this.indexOf(e);
     if (index < 0) {
@@ -113,7 +112,7 @@
   * @description
   * Adds an entity to this family if entity matches requirements
   */
-  Family.prototype.addIfMatch = function(e) {
+  Family.prototype.addIfMatch = function (e) {
     if (this.isMatch(e)) {
       this.add(e);
     }
@@ -128,10 +127,10 @@
   * @description
   * Removes an entity from this family
   */
-  Family.prototype.remove = function(e) {
+  Family.prototype.remove = function (e) {
     var index = this.indexOf(e);
     if (index > -1) {
-      this.splice(index,1);
+      this.splice(index, 1);
       this.entityRemoved.dispatch(e);
     }
   };
@@ -145,13 +144,13 @@
   * @description
   * Removes an entity from this family if entity matches requirements
   */
-  Family.prototype.removeIfMatch = function(e) {
+  Family.prototype.removeIfMatch = function (e) {
     if (this.isMatch(e)) {
       this.remove(e);
     }
   };
 
-  Family.makeId = function(require) {
+  Family.makeId = function (require) {
     if (!require) { return '::'; }
     if (typeof require === 'string') { return require; }
     return require.sort().join('::');
@@ -167,5 +166,4 @@
     *
     * */
     .constant('Family', Family);
-
 })();

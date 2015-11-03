@@ -1,8 +1,7 @@
-/* global angular:true */
+/* global angular */
 
 // main
-(function() {
-
+(function () {
   'use strict';
 
   /**
@@ -19,11 +18,10 @@
   *
   */
 
-  function MapProvider() {
-
+  function MapProvider () {
     var map = {};
 
-    this.register = function(name, constructor) {
+    this.register = function (name, constructor) {
       if (angular.isObject(name)) {
         angular.extend(map, name);
       } else {
@@ -32,18 +30,17 @@
       return this;
     };
 
-    this.$get = ['$injector', function($injector) {
-      angular.forEach(map, function(value, key) {
+    this.$get = ['$injector', function ($injector) {
+      angular.forEach(map, function (value, key) {
         if (angular.isFunction(value)) {
           map[key] = $injector.invoke(value, null, null, key);
         }
       });
       return map;
     }];
-
   }
 
-  angular.module('hc.ngEcs',[])
+  angular.module('hc.ngEcs', [])
 
   /**
   * @ngdoc service
@@ -116,5 +113,4 @@
   * Index of {@link hc.ngEcs.Family:family families}, a family is an array of game entities matching a list of required components.
   * */
   .provider('$families', MapProvider);
-
 })();
